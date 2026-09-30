@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiRequestError } from "@/lib/api";
 import { ChampAuth } from "@/components/auth/ChampAuth";
+import { ChampPhotoProfil } from "@/components/auth/ChampPhotoProfil";
 import { BoutonAuthCompact } from "@/components/auth/BoutonAuthCompact";
 
 /**
@@ -23,6 +24,7 @@ export function EcranInscription() {
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   const [nomEntreprise, setNomEntreprise] = useState("");
   const [telephone, setTelephone] = useState("");
   const [email, setEmail] = useState("");
@@ -59,6 +61,7 @@ export function EcranInscription() {
         email,
         password: motDePasse,
         password_confirmation: confirmationMotDePasse,
+        photo: photo || undefined,
       });
     } catch (e) {
       // Formulaire à plusieurs champs (contrairement à la connexion, qui n'a
@@ -96,7 +99,11 @@ export function EcranInscription() {
 
         <h2 className="text-center text-lg font-bold text-brand-ink">Tes informations</h2>
 
-        <div className="mt-6 flex flex-col gap-3.5">
+        <div className="mt-4 flex justify-center">
+          <ChampPhotoProfil onChange={setPhoto} />
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3.5">
           <ChampAuth type="text" value={nom} onChange={setNom} placeholder="Nom" autoComplete="family-name" autoFocus />
           <ChampAuth type="text" value={prenom} onChange={setPrenom} placeholder="Prénom (optionnel)" autoComplete="given-name" />
           <ChampAuth type="text" value={nomEntreprise} onChange={setNomEntreprise} placeholder="Nom de l'entreprise" autoComplete="organization" />

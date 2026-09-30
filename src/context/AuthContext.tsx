@@ -24,8 +24,9 @@ export type DonneesInscription = {
   password_confirmation: string;
   // Seul champ "métier" exigé en plus à l'inscription (voir RegisterRequest
   // côté backend, required_if type_utilisateur=fournisseur) — contrairement
-  // au Livreur, aucun document n'est demandé ici.
+  // au Livreur, aucun document n'est exigé ici, la photo reste optionnelle.
   nom_entreprise: string;
+  photo?: File;
 };
 
 type AuthContextValue = {
@@ -102,22 +103,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * côté backend : le Fournisseur (contrairement au Coordinateur, provisionné
    * par un Administrateur) crée lui-même son compte. type_utilisateur est
    * fixé côté client, pas un choix laissé à l'utilisateur de cette app.
-   * Aucun fichier à envoyer (contrairement au Livreur) : corps JSON simple.
+   * Aucun document exigé (contrairement au Livreur) : corps JSON simple, sauf
+   * si une photo de profil optionnelle est fournie (alors FormData).
    */
   async function register(donnees: DonneesInscription) {
-    const reponse = await apiFetch<SessionResult>("/auth/register", {
-      method: "POST",
-      body: {
-        nom: donnees.nom,
-        prenom: donnees.prenom || undefined,
-        email: donnees.email,
-        telephone: donnees.telephone || undefined,
-        password: donnees.password,
-        password_confirmation: donnees.password_confirmation,
-        type_utilisateur: "fournisseur",
-        nom_entreprise: donnees.nom_entreprise,
-      },
-    });
+    const champs = {
+      nom: donnees.nom,
+      prenom: donnees.prenom || undefined,
+      email: donnees.email,
+      telephone: donnees.telephone || undefined,
+      password: donnees.password,
+      password_confirmation: donnees.password_confirmation,
+      type_utilisateur: "fournisseur",
+      nom_entreprise: donnees.nom_entreprise,
+    };
+
+    let body: unknown = champs;
+    if (donnees.photo) {
+      const formData = new FormData();
+      for (const [cle, valeur] of Object.entries(champs)) {
+        if (valeur !== undefined) formData.append(cle, valeur);
+      }
+      formData.append("photo", donnees.photo);
+      body = formData;
+    }
+
+    const reponse = await apiFetch<SessionResult>("/auth/register", { method: "POST", body });
 
     accesRefuseSiRoleInvalide(reponse.user);
     memoriser(reponse);
