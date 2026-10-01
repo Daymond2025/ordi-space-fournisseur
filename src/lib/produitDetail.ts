@@ -49,6 +49,8 @@ export type ProduitDetailComplet = {
   carte_graphique: string | null;
   couleur: string | null;
   cadeaux: string[] | null;
+  /** Photo par cadeau sélectionné (clé = un des éléments de `cadeaux`), URL déjà résolue côté backend (Produit::imagesCadeaux()) — absente ou `null` si aucune photo fournie pour ce cadeau. */
+  images_cadeaux: Record<string, string | null> | null;
   /** Contenu matériel du carton (ex. "Sacoche", "Souris") — distinct de `cadeaux` (incitation marketing), voir la migration contenu_pack. */
   contenu_pack: string[] | null;
   categorie: { id: number; nom_categorie: string } | null;

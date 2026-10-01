@@ -45,19 +45,34 @@ export const TYPES_LIVRAISON: { valeur: "physique" | "numerique"; label: string 
   { valeur: "numerique", label: "Numérique (logiciel / licence)" },
 ];
 
+// Du plus bas (vieux PC/Chromebook d'entrée de gamme) au plus récent, pour
+// couvrir tout le parc d'occasion revendu, pas seulement le haut de gamme.
 export const PROCESSEURS = [
+  "Intel Atom", "Intel Celeron", "Intel Pentium", "MediaTek / Chromebook",
   "Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core i9",
-  "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9",
-  "Apple M1", "Apple M2", "Apple M3", "Autre",
+  "AMD A-Series", "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9",
+  "Apple M1", "Apple M2", "Apple M3", "Apple M4", "Autre",
 ];
 export const CARTES_GRAPHIQUES = [
   "Intel UHD Graphics", "Intel Iris Xe", "NVIDIA GeForce GTX", "NVIDIA GeForce RTX",
   "AMD Radeon", "Aucune (intégrée)", "Autre",
 ];
-export const RAMS = ["4GB", "8GB", "16GB", "32GB", "64GB"];
+// 1GB/2GB inclus pour les machines d'entrée de gamme (Chromebook, vieux PC).
+export const RAMS = ["1GB", "2GB", "4GB", "8GB", "16GB", "32GB", "64GB"];
 export const TAILLES_ECRAN = ["11\"", "12\"", "13\"", "14\"", "15.6\"", "17\""];
 export const SYSTEMES_EXPLOITATION = ["Windows 10", "Windows 11", "macOS", "Linux", "Chrome OS", "Sans système"];
 export const TYPES_DISQUE = ["SSD", "HDD"];
-export const COULEURS = ["Noir", "Gris", "Argent", "Blanc", "Bleu", "Autre"];
+/** Palette visuelle (pastille de couleur) plutôt qu'une simple liste de texte brut ; `hex: null` = "Autre" (pas de pastille, couleur non standard). */
+export const COULEURS: { nom: string; hex: string | null }[] = [
+  { nom: "Noir", hex: "#111827" },
+  { nom: "Gris", hex: "#9CA3AF" },
+  { nom: "Argent", hex: "#C0C0C0" },
+  { nom: "Blanc", hex: "#F9FAFB" },
+  { nom: "Bleu", hex: "#2563EB" },
+  { nom: "Rouge", hex: "#DC2626" },
+  { nom: "Or", hex: "#D4AF37" },
+  { nom: "Rose", hex: "#EC4899" },
+  { nom: "Autre", hex: null },
+];
 export const QUANTITES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 100];
 export const CADEAUX_DISPONIBLES = ["Souris", "Sac", "Chargeur", "Casque", "Clé USB", "Autre"];

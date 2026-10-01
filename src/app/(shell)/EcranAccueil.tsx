@@ -44,38 +44,51 @@ export function EcranAccueil() {
   const [profil, setProfil] = useState<ProfilFournisseur | null>(null);
   const [compteurs, setCompteurs] = useState<CompteursCommandesFournisseur | null>(null);
   const [totalEnAttente, setTotalEnAttente] = useState<number | null>(null);
-  const [produits, setProduits] = useState<ProduitActif[]>([]);
-  const [chargement, setChargement] = useState(true);
+  const [produits, setProduits] = useState<ProduitActif[] | null>(null);
+
+  // 4 appels indépendants plutôt qu'un seul Promise.all() : le profil (et
+  // son en-tête) doit s'afficher dès qu'il arrive, sans attendre le plus
+  // lent des 4 — c'était la cause du "profil qui ne se charge pas" alors
+  // que l'API répond correctement, juste pas toujours vite.
+  useEffect(() => {
+    if (!token) return;
+    let annule = false;
+    apiFetch<ProfilFournisseur>("/moi/profil", { token }).then((data) => {
+      if (!annule) setProfil(data);
+    });
+    return () => {
+      annule = true;
+    };
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
     let annule = false;
+    apiFetch<ReponseCommandesFournisseur>("/fournisseur/moi/commandes?per_page=1", { token }).then((data) => {
+      if (!annule) setCompteurs(data.compteurs);
+    });
+    return () => {
+      annule = true;
+    };
+  }, [token]);
 
-    Promise.all([
-      apiFetch<ProfilFournisseur>("/moi/profil", { token }),
-      apiFetch<ReponseCommandesFournisseur>("/fournisseur/moi/commandes?per_page=1", { token }),
-      apiFetch<ReponsePortefeuilleFournisseur>("/fournisseur/moi/portefeuille", { token }),
-      apiFetch<ProduitActif[]>("/produits/activite-recente", { token }),
-    ])
-      .then(([profilData, commandesData, portefeuilleData, produitsActifs]) => {
-        if (annule) return;
-        setProfil(profilData);
-        setCompteurs(commandesData.compteurs);
-        setTotalEnAttente(portefeuilleData.total_en_attente);
-        setProduits(produitsActifs);
-      })
-      .catch(() => {
-        if (!annule) {
-          setProfil(null);
-          setCompteurs(null);
-          setTotalEnAttente(null);
-          setProduits([]);
-        }
-      })
-      .finally(() => {
-        if (!annule) setChargement(false);
-      });
+  useEffect(() => {
+    if (!token) return;
+    let annule = false;
+    apiFetch<ReponsePortefeuilleFournisseur>("/fournisseur/moi/portefeuille", { token }).then((data) => {
+      if (!annule) setTotalEnAttente(data.total_en_attente);
+    });
+    return () => {
+      annule = true;
+    };
+  }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    let annule = false;
+    apiFetch<ProduitActif[]>("/produits/activite-recente", { token }).then((data) => {
+      if (!annule) setProduits(data);
+    });
     return () => {
       annule = true;
     };
@@ -103,7 +116,7 @@ export function EcranAccueil() {
             </Link>
             <div>
               <p className="text-sm">Bonjour, 👋</p>
-              <p className="text-lg font-extrabold leading-tight">{chargement ? "…" : nomComplet || "—"}</p>
+              <p className="text-lg font-extrabold leading-tight">{profil ? nomComplet || "—" : "…"}</p>
             </div>
           </div>
 
@@ -145,7 +158,7 @@ export function EcranAccueil() {
       </div>
 
       <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
-        {chargement ? (
+        {produits === null ? (
           <p className="py-6 text-center text-sm text-brand-muted">Chargement…</p>
         ) : produits.length === 0 ? (
           <p className="py-6 text-center text-sm text-brand-muted">Aucune activité récente pour l&apos;instant.</p>

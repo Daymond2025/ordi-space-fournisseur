@@ -92,11 +92,7 @@ export function InfosProduit({ produitId }: { produitId: number }) {
     ] as { label: string; valeur: string | null; Icone: IconeSpec }[]
   ).filter((s): s is { label: string; valeur: string; Icone: IconeSpec } => Boolean(s.valeur));
 
-  const contenuOnglet: Record<(typeof ONGLETS)[number]["id"], string> = {
-    cadeaux: produit.cadeaux && produit.cadeaux.length > 0 ? produit.cadeaux.join(", ") : "",
-    description: produit.description ?? "",
-    pack: produit.contenu_pack && produit.contenu_pack.length > 0 ? produit.contenu_pack.join(", ") : "",
-  };
+  const imagesCadeaux = produit.images_cadeaux ?? {};
 
   const fraisLivraisonMin =
     produit.frais_livraison.length > 0 ? Math.min(...produit.frais_livraison.map((f) => Number(f.montant))) : null;
@@ -118,18 +114,6 @@ export function InfosProduit({ produitId }: { produitId: number }) {
             </div>
           ) : null}
 
-          {/* Le fournisseur ne peut jamais démarrer une négociation (réservé
-              Coordinateur/Admin, voir MessageController::demarrerNegociationPrix())
-              — juste consulter/répondre si le Coordinateur en a ouvert une. */}
-          <button
-            type="button"
-            onClick={() => router.push(`/produits/${produit.id}/negociation-prix`)}
-            className="mt-2 flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3"
-            style={{ boxShadow: OMBRE_CARTE }}
-          >
-            <span className="text-sm font-bold text-brand-ink">Négociation de prix</span>
-            <ChevronRightIcon className="h-4 w-4 shrink-0 text-brand-muted" />
-          </button>
         </div>
       ) : null}
 
@@ -207,11 +191,15 @@ export function InfosProduit({ produitId }: { produitId: number }) {
           style={{ background: "rgba(242, 243, 255, 0.6)" }}
         >
           <div className="shrink-0">
-            <p className="whitespace-nowrap text-[10px] text-brand-muted">Prix de vente</p>
+            {/* Avant publication, prix_vente (prix public, fixé par le
+                Coordinateur) est encore absent — plutôt que de n'afficher aucun
+                chiffre, on retombe sur `prix` (le prix partenaire que LE
+                FOURNISSEUR a lui-même saisi, toujours disponible). */}
+            <p className="whitespace-nowrap text-[10px] text-brand-muted">
+              {produit.prix_vente ? "Prix de vente" : "Mon prix partenaire (prix public à venir)"}
+            </p>
             <div className="mt-0.5 flex items-baseline gap-2 whitespace-nowrap">
-              <p className="text-[17px] font-extrabold text-orange-600">
-                {produit.prix_vente ? `${formaterPrix(produit.prix_vente)} FCFA` : "Prix à venir"}
-              </p>
+              <p className="text-[17px] font-extrabold text-orange-600">{formaterPrix(produit.prix_vente ?? produit.prix)} FCFA</p>
               {produit.prix_barre ? (
                 <p className="text-[11px] text-brand-muted line-through">{formaterPrix(produit.prix_barre)}&nbsp;FCFA</p>
               ) : null}
@@ -224,6 +212,23 @@ export function InfosProduit({ produitId }: { produitId: number }) {
             </span>
           ) : null}
         </div>
+
+        {/* Le fournisseur ne peut jamais démarrer une négociation (réservé
+            Coordinateur/Admin, voir MessageController::demarrerNegociationPrix())
+            — juste consulter/répondre si le Coordinateur en a ouvert une. Placé
+            juste sous la carte "Prix de vente" (retour de test réel), au lieu
+            d'en haut de l'écran. */}
+        {statut ? (
+          <button
+            type="button"
+            onClick={() => router.push(`/produits/${produit.id}/negociation-prix`)}
+            className="mt-1.5 flex w-full items-center justify-between rounded-md px-3 py-2"
+            style={{ background: "rgba(242, 243, 255, 0.6)" }}
+          >
+            <span className="text-sm font-bold text-brand-ink">Négociation de prix</span>
+            <ChevronRightIcon className="h-4 w-4 shrink-0 text-brand-muted" />
+          </button>
+        ) : null}
 
         <div
           className="relative mt-1.5 flex min-h-[51px] items-center justify-between rounded-md py-2 pl-5 pr-4"
@@ -286,7 +291,43 @@ export function InfosProduit({ produitId }: { produitId: number }) {
         </div>
 
         <div className="mt-3 min-h-[305px] rounded-[13px] p-4 text-xs text-brand-muted" style={{ background: "rgba(247, 248, 255, 1)" }}>
-          {contenuOnglet[ongletActif]}
+          {ongletActif === "cadeaux" ? (
+            produit.cadeaux && produit.cadeaux.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {produit.cadeaux.map((nom) => (
+                  <div key={nom} className="flex items-center gap-2.5 rounded-xl bg-white px-3 py-2">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F2F3FF]">
+                      {imagesCadeaux[nom] ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- domaine backend dynamique, pas de config next/image nécessaire ici
+                        <img src={imagesCadeaux[nom] as string} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4 text-brand-muted" />
+                      )}
+                    </span>
+                    <span className="text-sm font-semibold text-brand-ink">{nom}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              "Aucun cadeau pour ce produit."
+            )
+          ) : ongletActif === "description" ? (
+            produit.description ? (
+              <p className="font-bold text-brand-ink">{produit.description}</p>
+            ) : (
+              "Aucune description."
+            )
+          ) : produit.contenu_pack && produit.contenu_pack.length > 0 ? (
+            <ul className="list-disc space-y-1 pl-4">
+              {produit.contenu_pack.map((item) => (
+                <li key={item} className="text-brand-ink">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            "Pack non renseigné."
+          )}
         </div>
       </div>
 

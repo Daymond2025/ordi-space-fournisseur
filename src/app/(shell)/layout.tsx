@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { RouteGuard } from "@/components/RouteGuard";
 import { BottomNav } from "@/components/space/BottomNav";
 
@@ -11,11 +14,16 @@ import { BottomNav } from "@/components/space/BottomNav";
 // l'écran (Space, Centre des commandes...), les rend juste correctement
 // défilants indépendamment de la nav quand leur contenu dépasse.
 export default function ShellLayout({ children }: { children: ReactNode }) {
+  // La nav du bas n'a de sens que sur l'accueil (Space) : partout ailleurs,
+  // chaque écran porte désormais son propre bouton retour dans son en-tête.
+  const pathname = usePathname();
+  const estAccueil = pathname === "/";
+
   return (
     <RouteGuard>
       <div className="mx-auto flex h-dvh w-full max-w-xl flex-col overflow-hidden bg-[#f2f5fa] md:my-6 md:h-[calc(100dvh-3rem)] md:rounded-[2rem] md:shadow-2xl md:shadow-slate-900/15 md:ring-1 md:ring-black/5">
         <div className="flex-1 overflow-y-auto">{children}</div>
-        <BottomNav />
+        {estAccueil ? <BottomNav /> : null}
       </div>
     </RouteGuard>
   );

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { CarteProduitActif } from "@/components/space/CarteProduitActif";
 import { CarteCommandeFournisseur } from "@/components/operations/CarteCommandeFournisseur";
+import { ChevronLeftIcon } from "@/components/icons";
 import { BUCKETS_COMMANDE, type BucketCommande } from "@/lib/statuts";
 import type { CommandeCarte, ProduitActif, StatistiquesFournisseurMoi } from "@/lib/types";
 
@@ -100,11 +101,21 @@ export function EcranCommandes() {
     <div>
       <div className="bg-gradient-espace relative rounded-b-[22px] px-4 pb-5 pt-6 text-white">
         <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-base font-extrabold uppercase tracking-wide">Centre des commandes</p>
-            <p className="mt-0.5 truncate text-xs text-white/80">
-              {statistiques ? `${statistiques.produits_total} Produits · ${statistiques.commandes_recues} Commandes` : ""}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Retour"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            <div className="min-w-0">
+              <p className="text-base font-extrabold uppercase tracking-wide">Centre des commandes</p>
+              <p className="mt-0.5 truncate text-xs text-white/80">
+                {statistiques ? `${statistiques.produits_total} Produits · ${statistiques.commandes_recues} Commandes` : ""}
+              </p>
+            </div>
           </div>
 
           <button

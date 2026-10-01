@@ -56,9 +56,11 @@ export function BottomNav() {
       ))}
 
       <div className="flex flex-1 flex-col items-center">
+        {/* Centre de discussion des commandes — chaque commande de /commandes
+            s'ouvre sur un vrai fil de conversation (voir EcranCommande.tsx). */}
         <Link
-          href="/"
-          aria-label="Space"
+          href="/commandes"
+          aria-label="Discussion des commandes"
           className="bg-gradient-espace -mt-6 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white shadow-lg shadow-blue-900/20"
         >
           <Image src="/images/mascotte.png" alt="" width={64} height={64} className="h-9 w-9 object-contain" />

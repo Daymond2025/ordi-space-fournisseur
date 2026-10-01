@@ -81,18 +81,26 @@ export function EcranAjouterProduit() {
   const [couleur, setCouleur] = useState("");
   const [quantite, setQuantite] = useState("");
   const [cadeauChoisi, setCadeauChoisi] = useState("");
+  // "Pack complet" (onglet déjà présent dans InfosProduit.tsx) = les cadeaux
+  // sélectionnés (`cadeaux`, liste prédéfinie CADEAUX_DISPONIBLES) + des
+  // articles saisis librement (`contenuPackManuel`) — les deux sont fusionnés
+  // au moment de l'envoi (voir envoyer()), `cadeaux` restant par ailleurs
+  // envoyé séparément tel quel (colonne dédiée côté backend).
   const [cadeaux, setCadeaux] = useState<string[]>([]);
-  // "Pack complet" (onglet déjà présent dans InfosProduit.tsx, jusqu'ici
-  // toujours vide) — texte libre, contrairement à `cadeaux` (liste
-  // prédéfinie) : ce qui est matériellement inclus dans le carton.
+  // Photo facultative par cadeau sélectionné (clé = nom du cadeau) —
+  // fichiers réels envoyés en `images_cadeaux[nom]`, aperçus en data: (pas
+  // blob:, bloqué par la CSP de cette app, voir ChampPhotoProfil.tsx).
+  const [cadeauxFichiers, setCadeauxFichiers] = useState<Record<string, File>>({});
+  const [cadeauxApercus, setCadeauxApercus] = useState<Record<string, string>>({});
+  const cadeauFichierRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [contenuPackSaisie, setContenuPackSaisie] = useState("");
-  const [contenuPack, setContenuPack] = useState<string[]>([]);
+  const [contenuPackManuel, setContenuPackManuel] = useState<string[]>([]);
   const [prixPartenaire, setPrixPartenaire] = useState("");
 
-  // Vente par les livreurs (Boutique) — facultatif : sans commission renseignée, le produit n'apparaît pas en revente.
-  const [commissionRevente, setCommissionRevente] = useState("");
-  const [prixBarre, setPrixBarre] = useState("");
-  const [reduction, setReduction] = useState("");
+  // État déclaratif du produit (Neuf/Occasion/…) — simple information de
+  // fiche, indépendant de la "Boutique des livreurs" (commission/prix
+  // barré/réduction, retirés d'ici : c'est le Coordinateur qui les fixe
+  // avant publication, pas le fournisseur).
   const [etat, setEtat] = useState("");
   const [frais, setFrais] = useState<Record<number, string>>({});
 
@@ -147,13 +155,15 @@ export function EcranAjouterProduit() {
     if (systemeExploitation) formData.append("systeme_exploitation", systemeExploitation);
     if (couleur) formData.append("couleur", couleur);
     if (etat) formData.append("etat_produit", etat);
-    if (commissionRevente.trim()) formData.append("commission_revente", commissionRevente);
-    if (prixBarre.trim()) formData.append("prix_barre", prixBarre);
-    if (reduction.trim()) formData.append("pourcentage_reduction", reduction);
     // Un logiciel/licence n'est jamais livré par un livreur — aucun barème à envoyer.
     if (typeLivraison === "physique") ajouterBaremeAuFormData(formData, frais);
     cadeaux.forEach((c) => formData.append("cadeaux[]", c));
-    contenuPack.forEach((c) => formData.append("contenu_pack[]", c));
+    // Pack complet = les cadeaux sélectionnés + les articles saisis à la main, fusionnés sans doublon.
+    Array.from(new Set([...cadeaux, ...contenuPackManuel])).forEach((c) => formData.append("contenu_pack[]", c));
+    cadeaux.forEach((c) => {
+      const fichier = cadeauxFichiers[c];
+      if (fichier) formData.append(`images_cadeaux[${c}]`, fichier);
+    });
     photosFichiers.forEach((fichier) => formData.append("images[]", fichier));
 
     try {
@@ -173,17 +183,38 @@ export function EcranAjouterProduit() {
 
   function retirerCadeau(valeur: string) {
     setCadeaux((c) => c.filter((c2) => c2 !== valeur));
+    setCadeauxFichiers((f) => {
+      const copie = { ...f };
+      delete copie[valeur];
+      return copie;
+    });
+    setCadeauxApercus((a) => {
+      const copie = { ...a };
+      delete copie[valeur];
+      return copie;
+    });
+  }
+
+  function choisirImageCadeau(nomCadeau: string, fichiers: FileList | null) {
+    const fichier = fichiers?.[0];
+    if (!fichier) return;
+    setCadeauxFichiers((f) => ({ ...f, [nomCadeau]: fichier }));
+    // FileReader (data:) plutôt que URL.createObjectURL() (blob:) — la CSP de
+    // cette app n'autorise pas `blob:` pour les images (voir ChampPhotoProfil.tsx).
+    const lecteur = new FileReader();
+    lecteur.onload = () => setCadeauxApercus((a) => ({ ...a, [nomCadeau]: lecteur.result as string }));
+    lecteur.readAsDataURL(fichier);
   }
 
   function ajouterContenuPack() {
     const valeur = contenuPackSaisie.trim();
-    if (!valeur || contenuPack.includes(valeur)) return;
-    setContenuPack((c) => [...c, valeur]);
+    if (!valeur || contenuPackManuel.includes(valeur)) return;
+    setContenuPackManuel((c) => [...c, valeur]);
     setContenuPackSaisie("");
   }
 
   function retirerContenuPack(valeur: string) {
-    setContenuPack((c) => c.filter((c2) => c2 !== valeur));
+    setContenuPackManuel((c) => c.filter((c2) => c2 !== valeur));
   }
 
   function choisirCategorie(label: string) {
@@ -211,10 +242,10 @@ export function EcranAjouterProduit() {
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
-          <p className="mt-8 text-center text-2xl font-extrabold">Que veux-tu ajouter ?</p>
+          <p className="mt-8 text-center text-2xl font-extrabold">Que veux-tu vendre</p>
         </div>
 
-        <div className="relative -mt-10 flex-1 rounded-t-[40px] bg-white px-[22px] pb-6 pt-3">
+        <div className="relative -mt-24 flex-1 rounded-t-[40px] bg-white px-[22px] pb-6 pt-3">
           <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-brand-line" />
 
           <div className="grid grid-cols-2 gap-x-[15px] gap-y-4">
@@ -518,16 +549,32 @@ export function EcranAjouterProduit() {
 
       <div className="flex-1 space-y-4 overflow-y-auto bg-[#f2f5fa] px-4 pb-4 pt-4">
         <div className={`${CARTE_CLASSE} space-y-3`} style={CARTE_OMBRE}>
-          <select value={couleur} onChange={(e) => setCouleur(e.target.value)} className={CHAMP_CLASSE}>
-            <option value="" disabled>
-              Couleurs disponible
-            </option>
-            {COULEURS.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <div>
+            <p className="mb-2 text-sm font-bold text-brand-ink">Couleurs disponible</p>
+            <div className="flex flex-wrap gap-3">
+              {COULEURS.map((c) => (
+                <button
+                  key={c.nom}
+                  type="button"
+                  onClick={() => setCouleur(c.nom)}
+                  aria-label={c.nom}
+                  aria-pressed={couleur === c.nom}
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ring-2 transition-all ${
+                    couleur === c.nom ? "ring-[color:var(--brand-blue-end)]" : "ring-transparent"
+                  }`}
+                >
+                  {c.hex ? (
+                    <span className="h-9 w-9 rounded-full border border-black/10" style={{ background: c.hex }} />
+                  ) : (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-brand-line text-[9px] font-semibold text-brand-muted">
+                      Autre
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {couleur ? <p className="mt-2 text-xs text-brand-muted">Sélectionné : {couleur}</p> : null}
+          </div>
 
           <select value={quantite} onChange={(e) => setQuantite(e.target.value)} className={CHAMP_CLASSE}>
             <option value="" disabled>
@@ -542,7 +589,11 @@ export function EcranAjouterProduit() {
         </div>
 
         <div className={CARTE_CLASSE} style={CARTE_OMBRE}>
-          <p className="mb-2 text-sm font-bold text-brand-ink">Sélectionner Les Cadeaux</p>
+          <p className="text-sm font-bold text-brand-ink">Pack complet</p>
+          <p className="mb-3 text-xs text-brand-muted">
+            Composé automatiquement des cadeaux sélectionnés ci-dessous — ajoute une photo pour chacun, et saisis à la main tout autre article inclus.
+          </p>
+
           <select
             value={cadeauChoisi}
             onChange={(e) => {
@@ -552,7 +603,7 @@ export function EcranAjouterProduit() {
             className={CHAMP_CLASSE}
           >
             <option value="" disabled>
-              Les cadeaux
+              Ajouter un cadeau
             </option>
             {CADEAUX_DISPONIBLES.map((c) => (
               <option key={c} value={c}>
@@ -562,23 +613,44 @@ export function EcranAjouterProduit() {
           </select>
 
           {cadeaux.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-col gap-2">
               {cadeaux.map((c) => (
-                <span key={c} className="flex items-center gap-1.5 rounded-full bg-[#F5F7FA] px-3 py-1.5 text-sm text-brand-ink">
-                  {c}
-                  <button type="button" onClick={() => retirerCadeau(c)} aria-label={`Retirer ${c}`} className="text-brand-muted">
+                <div key={c} className="flex items-center gap-2.5 rounded-2xl bg-[#F5F7FA] px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => cadeauFichierRefs.current[c]?.click()}
+                    aria-label={`Ajouter une photo pour ${c}`}
+                    className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white"
+                  >
+                    {cadeauxApercus[c] ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data:), pas une ressource Next/Image distante.
+                      <img src={cadeauxApercus[c]} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4 text-brand-muted" />
+                    )}
+                  </button>
+                  <input
+                    ref={(el) => {
+                      cadeauFichierRefs.current[c] = el;
+                    }}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      choisirImageCadeau(c, e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-sm text-brand-ink">{c}</span>
+                  <button type="button" onClick={() => retirerCadeau(c)} aria-label={`Retirer ${c}`} className="shrink-0 text-brand-muted">
                     ✕
                   </button>
-                </span>
+                </div>
               ))}
             </div>
           ) : null}
-        </div>
 
-        <div className={CARTE_CLASSE} style={CARTE_OMBRE}>
-          <p className="text-sm font-bold text-brand-ink">Pack complet</p>
-          <p className="mb-2 text-xs text-brand-muted">Ce qui est matériellement inclus dans le carton (ex. sacoche, souris).</p>
-          <div className="flex items-center gap-2">
+          <div className="mt-3 flex items-center gap-2">
             <input
               value={contenuPackSaisie}
               onChange={(e) => setContenuPackSaisie(e.target.value)}
@@ -588,7 +660,7 @@ export function EcranAjouterProduit() {
                   ajouterContenuPack();
                 }
               }}
-              placeholder="Ex. Sacoche de transport"
+              placeholder="Autre article inclus (saisie libre)"
               className={`${CHAMP_CLASSE} flex-1`}
             />
             <button
@@ -601,9 +673,9 @@ export function EcranAjouterProduit() {
             </button>
           </div>
 
-          {contenuPack.length > 0 ? (
+          {contenuPackManuel.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2">
-              {contenuPack.map((c) => (
+              {contenuPackManuel.map((c) => (
                 <span key={c} className="flex items-center gap-1.5 rounded-full bg-[#F5F7FA] px-3 py-1.5 text-sm text-brand-ink">
                   {c}
                   <button type="button" onClick={() => retirerContenuPack(c)} aria-label={`Retirer ${c}`} className="text-brand-muted">
@@ -631,12 +703,7 @@ export function EcranAjouterProduit() {
           </div>
         </div>
 
-        <div className={`${CARTE_CLASSE} space-y-3`} style={CARTE_OMBRE}>
-          <div>
-            <p className="text-sm font-bold text-brand-ink">Vente par les livreurs</p>
-            <p className="text-xs text-brand-muted">Facultatif — commission et prix de référence de la Boutique des livreurs.</p>
-          </div>
-
+        <div className={CARTE_CLASSE} style={CARTE_OMBRE}>
           <select value={etat} onChange={(e) => setEtat(e.target.value)} className={CHAMP_CLASSE}>
             <option value="">État du produit</option>
             {ETATS_PRODUIT.map((e) => (
@@ -645,36 +712,6 @@ export function EcranAjouterProduit() {
               </option>
             ))}
           </select>
-
-          {[
-            { valeur: prixBarre, set: setPrixBarre, placeholder: "Prix barré (référence)" },
-            { valeur: commissionRevente, set: setCommissionRevente, placeholder: "Commission du livreur" },
-          ].map((champ) => (
-            <div key={champ.placeholder} className="flex items-center rounded-2xl border border-brand-line px-4 py-3">
-              <input
-                type="number"
-                min={0}
-                value={champ.valeur}
-                onChange={(e) => champ.set(e.target.value)}
-                placeholder={champ.placeholder}
-                className="min-w-0 flex-1 text-sm text-brand-ink outline-none placeholder:text-brand-muted"
-              />
-              <span className="shrink-0 text-sm text-brand-muted">FCFA</span>
-            </div>
-          ))}
-
-          <div className="flex items-center rounded-2xl border border-brand-line px-4 py-3">
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={reduction}
-              onChange={(e) => setReduction(e.target.value)}
-              placeholder="Réduction affichée"
-              className="min-w-0 flex-1 text-sm text-brand-ink outline-none placeholder:text-brand-muted"
-            />
-            <span className="shrink-0 text-sm text-brand-muted">%</span>
-          </div>
         </div>
 
         {/* Un logiciel/licence (numérique) n'est jamais livré par un livreur — aucun barème pertinent. */}

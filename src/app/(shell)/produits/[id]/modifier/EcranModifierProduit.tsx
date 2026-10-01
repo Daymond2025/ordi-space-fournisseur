@@ -65,14 +65,17 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
 
   const [couleur, setCouleur] = useState("");
   const [cadeauChoisi, setCadeauChoisi] = useState("");
+  // Pack complet = cadeaux sélectionnés + articles saisis à la main, fusionnés à l'enregistrement (voir enregistrer()) — même logique que EcranAjouterProduit.tsx.
   const [cadeaux, setCadeaux] = useState<string[]>([]);
+  const [cadeauxFichiers, setCadeauxFichiers] = useState<Record<string, File>>({});
+  const [cadeauxApercus, setCadeauxApercus] = useState<Record<string, string>>({});
+  const cadeauFichierRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [contenuPackSaisie, setContenuPackSaisie] = useState("");
-  const [contenuPack, setContenuPack] = useState<string[]>([]);
+  const [contenuPackManuel, setContenuPackManuel] = useState<string[]>([]);
 
+  // État déclaratif seulement — commission/prix barré/réduction retirés :
+  // c'est le Coordinateur qui les fixe avant publication, pas le fournisseur.
   const [etat, setEtat] = useState("");
-  const [commissionRevente, setCommissionRevente] = useState("");
-  const [prixBarre, setPrixBarre] = useState("");
-  const [reduction, setReduction] = useState("");
   const [frais, setFrais] = useState<Record<number, string>>({});
 
   const [enregistrement, setEnregistrement] = useState(false);
@@ -95,12 +98,16 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
     setSystemeExploitation(data.systeme_exploitation ?? "");
     setDureeGarantieMois(data.duree_garantie_mois !== null ? String(data.duree_garantie_mois) : "");
     setCouleur(data.couleur ?? "");
-    setCadeaux(data.cadeaux ?? []);
-    setContenuPack(data.contenu_pack ?? []);
+    const cadeauxActuels = data.cadeaux ?? [];
+    setCadeaux(cadeauxActuels);
+    // `contenu_pack` est historiquement cadeaux + manuel fusionnés — on ne
+    // réaffiche ici que la partie manuelle, les cadeaux ayant déjà leur
+    // propre chip ci-dessous (évite de les voir en double).
+    setContenuPackManuel((data.contenu_pack ?? []).filter((item) => !cadeauxActuels.includes(item)));
+    setCadeauxApercus(
+      Object.fromEntries(Object.entries(data.images_cadeaux ?? {}).filter(([, url]) => url !== null)) as Record<string, string>
+    );
     setEtat(data.etat_produit ?? "");
-    setCommissionRevente(data.commission_revente ?? "");
-    setPrixBarre(data.prix_barre ?? "");
-    setReduction(data.pourcentage_reduction !== null ? String(data.pourcentage_reduction) : "");
     setFrais(
       Object.fromEntries(data.frais_livraison.filter((f) => f.localite).map((f) => [f.localite!.id, String(Number(f.montant))]))
     );
@@ -139,17 +146,37 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
 
   function retirerCadeau(valeur: string) {
     setCadeaux((c) => c.filter((c2) => c2 !== valeur));
+    setCadeauxFichiers((f) => {
+      const copie = { ...f };
+      delete copie[valeur];
+      return copie;
+    });
+    setCadeauxApercus((a) => {
+      const copie = { ...a };
+      delete copie[valeur];
+      return copie;
+    });
+  }
+
+  function choisirImageCadeau(nomCadeau: string, fichiers: FileList | null) {
+    const fichier = fichiers?.[0];
+    if (!fichier) return;
+    setCadeauxFichiers((f) => ({ ...f, [nomCadeau]: fichier }));
+    // FileReader (data:) plutôt que URL.createObjectURL() (blob:), bloqué par la CSP — voir ChampPhotoProfil.tsx.
+    const lecteur = new FileReader();
+    lecteur.onload = () => setCadeauxApercus((a) => ({ ...a, [nomCadeau]: lecteur.result as string }));
+    lecteur.readAsDataURL(fichier);
   }
 
   function ajouterContenuPack() {
     const valeur = contenuPackSaisie.trim();
-    if (!valeur || contenuPack.includes(valeur)) return;
-    setContenuPack((c) => [...c, valeur]);
+    if (!valeur || contenuPackManuel.includes(valeur)) return;
+    setContenuPackManuel((c) => [...c, valeur]);
     setContenuPackSaisie("");
   }
 
   function retirerContenuPack(valeur: string) {
-    setContenuPack((c) => c.filter((c2) => c2 !== valeur));
+    setContenuPackManuel((c) => c.filter((c2) => c2 !== valeur));
   }
 
   async function ajouterPhoto(fichier: File) {
@@ -188,12 +215,13 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
     if (dureeGarantieMois.trim()) formData.append("duree_garantie_mois", dureeGarantieMois);
     if (couleur) formData.append("couleur", couleur);
     if (etat) formData.append("etat_produit", etat);
-    if (commissionRevente.trim()) formData.append("commission_revente", commissionRevente);
-    if (prixBarre.trim()) formData.append("prix_barre", prixBarre);
-    if (reduction.trim()) formData.append("pourcentage_reduction", reduction);
     if (typeLivraison === "physique") ajouterBaremeAuFormData(formData, frais);
     cadeaux.forEach((c) => formData.append("cadeaux[]", c));
-    contenuPack.forEach((c) => formData.append("contenu_pack[]", c));
+    Array.from(new Set([...cadeaux, ...contenuPackManuel])).forEach((c) => formData.append("contenu_pack[]", c));
+    cadeaux.forEach((c) => {
+      const fichier = cadeauxFichiers[c];
+      if (fichier) formData.append(`images_cadeaux[${c}]`, fichier);
+    });
     // PHP interprète un PUT multipart/form-data comme du POST classique
     // seulement via cette convention Laravel (_method) — Fetch ne sait pas
     // envoyer de vrai PUT multipart autrement.
@@ -367,14 +395,32 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
           </div>
 
           <div className={`${CARTE_CLASSE} space-y-3`} style={CARTE_OMBRE}>
-            <select value={couleur} onChange={(e) => setCouleur(e.target.value)} className={CHAMP_CLASSE} aria-label="Couleur">
-              <option value="">Couleurs disponible</option>
-              {COULEURS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div>
+              <p className="mb-2 text-sm font-bold text-brand-ink">Couleurs disponible</p>
+              <div className="flex flex-wrap gap-3">
+                {COULEURS.map((c) => (
+                  <button
+                    key={c.nom}
+                    type="button"
+                    onClick={() => setCouleur(c.nom)}
+                    aria-label={c.nom}
+                    aria-pressed={couleur === c.nom}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ring-2 transition-all ${
+                      couleur === c.nom ? "ring-[color:var(--brand-blue-end)]" : "ring-transparent"
+                    }`}
+                  >
+                    {c.hex ? (
+                      <span className="h-9 w-9 rounded-full border border-black/10" style={{ background: c.hex }} />
+                    ) : (
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-brand-line text-[9px] font-semibold text-brand-muted">
+                        Autre
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {couleur ? <p className="mt-2 text-xs text-brand-muted">Sélectionné : {couleur}</p> : null}
+            </div>
             <select value={quantite} onChange={(e) => setQuantite(e.target.value)} className={CHAMP_CLASSE} aria-label="Quantité">
               <option value="" disabled>
                 Quantité
@@ -389,7 +435,11 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
           </div>
 
           <div className={CARTE_CLASSE} style={CARTE_OMBRE}>
-            <p className="mb-2 text-sm font-bold text-brand-ink">Les cadeaux</p>
+            <p className="text-sm font-bold text-brand-ink">Pack complet</p>
+            <p className="mb-3 text-xs text-brand-muted">
+              Composé automatiquement des cadeaux sélectionnés ci-dessous — ajoute une photo pour chacun, et saisis à la main tout autre article inclus.
+            </p>
+
             <select
               value={cadeauChoisi}
               onChange={(e) => {
@@ -399,7 +449,7 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
               className={CHAMP_CLASSE}
             >
               <option value="" disabled>
-                Les cadeaux
+                Ajouter un cadeau
               </option>
               {CADEAUX_DISPONIBLES.map((c) => (
                 <option key={c} value={c}>
@@ -407,24 +457,46 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
                 </option>
               ))}
             </select>
+
             {cadeaux.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-col gap-2">
                 {cadeaux.map((c) => (
-                  <span key={c} className="flex items-center gap-1.5 rounded-full bg-[#F5F7FA] px-3 py-1.5 text-sm text-brand-ink">
-                    {c}
-                    <button type="button" onClick={() => retirerCadeau(c)} aria-label={`Retirer ${c}`} className="text-brand-muted">
+                  <div key={c} className="flex items-center gap-2.5 rounded-2xl bg-[#F5F7FA] px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => cadeauFichierRefs.current[c]?.click()}
+                      aria-label={`Ajouter une photo pour ${c}`}
+                      className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white"
+                    >
+                      {cadeauxApercus[c] ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- aperçu local (data:) ou URL déjà servie, pas une ressource Next/Image distante à optimiser.
+                        <img src={cadeauxApercus[c]} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4 text-brand-muted" />
+                      )}
+                    </button>
+                    <input
+                      ref={(el) => {
+                        cadeauFichierRefs.current[c] = el;
+                      }}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        choisirImageCadeau(c, e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm text-brand-ink">{c}</span>
+                    <button type="button" onClick={() => retirerCadeau(c)} aria-label={`Retirer ${c}`} className="shrink-0 text-brand-muted">
                       ✕
                     </button>
-                  </span>
+                  </div>
                 ))}
               </div>
             ) : null}
-          </div>
 
-          <div className={CARTE_CLASSE} style={CARTE_OMBRE}>
-            <p className="text-sm font-bold text-brand-ink">Pack complet</p>
-            <p className="mb-2 text-xs text-brand-muted">Ce qui est matériellement inclus dans le carton (ex. sacoche, souris).</p>
-            <div className="flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <input
                 value={contenuPackSaisie}
                 onChange={(e) => setContenuPackSaisie(e.target.value)}
@@ -434,7 +506,7 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
                     ajouterContenuPack();
                   }
                 }}
-                placeholder="Ex. Sacoche de transport"
+                placeholder="Autre article inclus (saisie libre)"
                 className={`${CHAMP_CLASSE} flex-1`}
               />
               <button
@@ -446,9 +518,10 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
                 Ajouter
               </button>
             </div>
-            {contenuPack.length > 0 ? (
+
+            {contenuPackManuel.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
-                {contenuPack.map((c) => (
+                {contenuPackManuel.map((c) => (
                   <span key={c} className="flex items-center gap-1.5 rounded-full bg-[#F5F7FA] px-3 py-1.5 text-sm text-brand-ink">
                     {c}
                     <button type="button" onClick={() => retirerContenuPack(c)} aria-label={`Retirer ${c}`} className="text-brand-muted">
@@ -479,11 +552,7 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
             ) : null}
           </div>
 
-          <div className={`${CARTE_CLASSE} space-y-3`} style={CARTE_OMBRE}>
-            <div>
-              <p className="text-sm font-bold text-brand-ink">Vente par les livreurs</p>
-              <p className="text-xs text-brand-muted">Facultatif — commission et prix de référence de la Boutique des livreurs.</p>
-            </div>
+          <div className={CARTE_CLASSE} style={CARTE_OMBRE}>
             <select value={etat} onChange={(e) => setEtat(e.target.value)} className={CHAMP_CLASSE}>
               <option value="">État du produit</option>
               {ETATS_PRODUIT.map((e) => (
@@ -492,34 +561,6 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
                 </option>
               ))}
             </select>
-            {[
-              { valeur: prixBarre, set: setPrixBarre, placeholder: "Prix barré (référence)" },
-              { valeur: commissionRevente, set: setCommissionRevente, placeholder: "Commission du livreur" },
-            ].map((champ) => (
-              <div key={champ.placeholder} className="flex items-center rounded-2xl border border-brand-line px-4 py-3">
-                <input
-                  type="number"
-                  min={0}
-                  value={champ.valeur}
-                  onChange={(e) => champ.set(e.target.value)}
-                  placeholder={champ.placeholder}
-                  className="min-w-0 flex-1 text-sm text-brand-ink outline-none placeholder:text-brand-muted"
-                />
-                <span className="shrink-0 text-sm text-brand-muted">FCFA</span>
-              </div>
-            ))}
-            <div className="flex items-center rounded-2xl border border-brand-line px-4 py-3">
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={reduction}
-                onChange={(e) => setReduction(e.target.value)}
-                placeholder="Réduction affichée"
-                className="min-w-0 flex-1 text-sm text-brand-ink outline-none placeholder:text-brand-muted"
-              />
-              <span className="shrink-0 text-sm text-brand-muted">%</span>
-            </div>
           </div>
 
           {token && typeLivraison === "physique" ? (

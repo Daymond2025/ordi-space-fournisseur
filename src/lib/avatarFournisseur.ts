@@ -9,6 +9,13 @@ export function couleurAvatarFournisseur(id: number): string {
   return PALETTE_AVATAR[id % PALETTE_AVATAR.length];
 }
 
-export function initialesFournisseur(nomEntreprise: string): string {
-  return nomEntreprise.trim().slice(0, 2).toUpperCase();
+/**
+ * `nomEntreprise` est non-nullable côté type (et NOT NULL en base), mais un
+ * compte avec des données incomplètes/historiques peut tout de même renvoyer
+ * une valeur absente à l'exécution — défensif plutôt que de planter tout
+ * l'en-tête profil (`.trim()` sur `undefined` observé en prod sur un autre
+ * appel non protégé, retour de test réel).
+ */
+export function initialesFournisseur(nomEntreprise: string | null | undefined): string {
+  return (nomEntreprise ?? "").trim().slice(0, 2).toUpperCase() || "—";
 }
