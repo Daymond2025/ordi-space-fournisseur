@@ -102,17 +102,25 @@ export function EcranDiscussionProduit({ produitId }: { produitId: number }) {
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
 
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#EEF1F6]">
-            {photo ? (
-              <Image src={photo} alt={nomProduit} fill className="object-cover" sizes="40px" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-brand-muted">
-                <MonitorIcon className="h-5 w-5" />
-              </div>
-            )}
-          </div>
+          {/* L'image + le nom mènent à la fiche produit (retour de test réel) — même principe que le bloc produit de EcranCommande.tsx. */}
+          <button
+            type="button"
+            onClick={() => router.push(`/produits/${produitId}/detail`)}
+            aria-label="Voir la fiche produit"
+            className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          >
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#EEF1F6]">
+              {photo ? (
+                <Image src={photo} alt={nomProduit} fill className="object-cover" sizes="40px" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-brand-muted">
+                  <MonitorIcon className="h-5 w-5" />
+                </div>
+              )}
+            </div>
 
-          <p className="min-w-0 flex-1 truncate text-sm font-bold text-brand-ink">{nomProduit}</p>
+            <p className="min-w-0 flex-1 truncate text-sm font-bold text-brand-ink">{nomProduit}</p>
+          </button>
 
           {/* Même icône que l'onglet "Paiement" de la nav du bas, mais une
               fonctionnalité différente propre à cet écran : "Centre de

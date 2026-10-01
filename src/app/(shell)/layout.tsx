@@ -13,17 +13,20 @@ import { BottomNav } from "@/components/space/BottomNav";
 // change rien visuellement sur les écrans dont le contenu tient déjà dans
 // l'écran (Space, Centre des commandes...), les rend juste correctement
 // défilants indépendamment de la nav quand leur contenu dépasse.
+// Seul l'écran "Détail produit" masque la nav du bas (retour de test réel) —
+// partout ailleurs elle reste affichée, en plus du bouton retour propre à
+// chaque écran (les deux coexistent, ce n'est plus l'un ou l'autre).
+const MASQUE_NAV = /^\/produits\/\d+\/detail(\/|$)/;
+
 export default function ShellLayout({ children }: { children: ReactNode }) {
-  // La nav du bas n'a de sens que sur l'accueil (Space) : partout ailleurs,
-  // chaque écran porte désormais son propre bouton retour dans son en-tête.
   const pathname = usePathname();
-  const estAccueil = pathname === "/";
+  const masquerNav = MASQUE_NAV.test(pathname ?? "");
 
   return (
     <RouteGuard>
       <div className="mx-auto flex h-dvh w-full max-w-xl flex-col overflow-hidden bg-[#f2f5fa] md:my-6 md:h-[calc(100dvh-3rem)] md:rounded-[2rem] md:shadow-2xl md:shadow-slate-900/15 md:ring-1 md:ring-black/5">
         <div className="flex-1 overflow-y-auto">{children}</div>
-        {estAccueil ? <BottomNav /> : null}
+        {masquerNav ? null : <BottomNav />}
       </div>
     </RouteGuard>
   );

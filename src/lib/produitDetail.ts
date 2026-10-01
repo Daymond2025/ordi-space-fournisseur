@@ -62,6 +62,8 @@ export type ProduitDetailComplet = {
   motif_rejet?: string | null;
   /** Marge Ordi'Space = prix_vente − prix, calculée côté backend (Produit::commissionOrdispace()) — null tant que non publié (prix_vente absent). Informatif, jamais éditable par le fournisseur. */
   commission_ordispace: number | null;
+  /** Badge "Négociation de prix" — présent (true/false) uniquement pour le fournisseur propriétaire consultant sa propre fiche, absent pour les autres rôles (voir ProduitController::show()). */
+  negociation_a_lire?: boolean;
 };
 
 /** Résumé compact des specs principales — "Core i5 • 8 Go DDR4 • 256 Go SSD". */

@@ -59,7 +59,7 @@ export function InfosProduit({ produitId }: { produitId: number }) {
   const router = useRouter();
   const [produit, setProduit] = useState<ProduitDetailComplet | null>(null);
   const [imageActive, setImageActive] = useState(0);
-  const [ongletActif, setOngletActif] = useState<(typeof ONGLETS)[number]["id"]>("description");
+  const [ongletActif, setOngletActif] = useState<(typeof ONGLETS)[number]["id"]>("cadeaux");
   const [visionneuseOuverte, setVisionneuseOuverte] = useState(false);
 
   useEffect(() => {
@@ -93,6 +93,11 @@ export function InfosProduit({ produitId }: { produitId: number }) {
   ).filter((s): s is { label: string; valeur: string; Icone: IconeSpec } => Boolean(s.valeur));
 
   const imagesCadeaux = produit.images_cadeaux ?? {};
+  // Composé à l'affichage (cadeaux ∪ contenu_pack) plutôt que de ne lire que
+  // `contenu_pack` : couvre aussi les produits existants dont le pack n'a
+  // jamais été fusionné avec les cadeaux côté backend (créés/modifiés avant
+  // ce comportement, ou retouchés séparément par le Coordinateur).
+  const packComplet = Array.from(new Set([...(produit.cadeaux ?? []), ...(produit.contenu_pack ?? [])]));
 
   const fraisLivraisonMin =
     produit.frais_livraison.length > 0 ? Math.min(...produit.frais_livraison.map((f) => Number(f.montant))) : null;
@@ -217,29 +222,24 @@ export function InfosProduit({ produitId }: { produitId: number }) {
             Coordinateur/Admin, voir MessageController::demarrerNegociationPrix())
             — juste consulter/répondre si le Coordinateur en a ouvert une. Placé
             juste sous la carte "Prix de vente" (retour de test réel), au lieu
-            d'en haut de l'écran. */}
+            d'en haut de l'écran. Pastille rouge si un message de négociation du
+            Coordinateur n'a pas encore été consulté (Produit::negociationALirePar()). */}
         {statut ? (
           <button
             type="button"
             onClick={() => router.push(`/produits/${produit.id}/negociation-prix`)}
-            className="mt-1.5 flex w-full items-center justify-between rounded-md px-3 py-2"
+            className="relative mt-1.5 flex w-full items-center justify-between rounded-md px-3 py-2"
             style={{ background: "rgba(242, 243, 255, 0.6)" }}
           >
-            <span className="text-sm font-bold text-brand-ink">Négociation de prix</span>
+            <span className="flex items-center gap-2 text-sm font-bold text-brand-ink">
+              Négociation de prix
+              {produit.negociation_a_lire ? (
+                <span aria-label="Nouveau message" className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+              ) : null}
+            </span>
             <ChevronRightIcon className="h-4 w-4 shrink-0 text-brand-muted" />
           </button>
         ) : null}
-
-        <div
-          className="relative mt-1.5 flex min-h-[51px] items-center justify-between rounded-md py-2 pl-5 pr-4"
-          style={{ background: "rgba(255, 236, 208, 0.54)" }}
-        >
-          <span aria-hidden="true" className="absolute left-[5px] top-1 h-[42px] w-1 rounded-md" style={{ background: "rgba(255, 119, 0, 1)" }} />
-          <span className="whitespace-nowrap text-lg font-light text-orange-700">Commission revente</span>
-          <span className="whitespace-nowrap text-lg font-extrabold text-orange-600">
-            {produit.commission_revente ? `${formaterPrix(produit.commission_revente)} FCFA` : "—"}
-          </span>
-        </div>
 
         {/* Informatif uniquement — jamais éditable par le fournisseur (prix_vente
             est verrouillé côté requête, voir StoreProduitRequest::rules()). Masqué
@@ -317,9 +317,9 @@ export function InfosProduit({ produitId }: { produitId: number }) {
             ) : (
               "Aucune description."
             )
-          ) : produit.contenu_pack && produit.contenu_pack.length > 0 ? (
+          ) : packComplet.length > 0 ? (
             <ul className="list-disc space-y-1 pl-4">
-              {produit.contenu_pack.map((item) => (
+              {packComplet.map((item) => (
                 <li key={item} className="text-brand-ink">
                   {item}
                 </li>

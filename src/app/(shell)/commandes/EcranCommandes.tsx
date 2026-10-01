@@ -32,8 +32,7 @@ export function EcranCommandes() {
   const router = useRouter();
 
   const [statistiques, setStatistiques] = useState<StatistiquesFournisseurMoi | null>(null);
-  const [produits, setProduits] = useState<ProduitActif[]>([]);
-  const [chargement, setChargement] = useState(true);
+  const [produits, setProduits] = useState<ProduitActif[] | null>(null);
   const [onglet, setOnglet] = useState<"chat" | "commandes">("chat");
 
   const [bucketActif, setBucketActif] = useState<BucketCommande>("nouvelle");
@@ -41,32 +40,34 @@ export function EcranCommandes() {
   const [compteurs, setCompteurs] = useState<Record<BucketCommande, number> | null>(null);
   const [chargementCommandes, setChargementCommandes] = useState(true);
 
+  // 2 appels indépendants (pas un Promise.all()) : les statistiques de
+  // l'en-tête et la liste des cartes n'ont aucune raison d'attendre l'une
+  // l'autre — même raisonnement que EcranAccueil.tsx.
   useEffect(() => {
     if (!token) return;
     let annule = false;
-
-    Promise.all([
-      apiFetch<ReponseFournisseurMoi>("/fournisseur/moi", { token }),
-      apiFetch<ProduitActif[]>("/produits/activite-recente", { token }),
-    ])
-      .then(([moi, produitsActifs]) => {
-        if (annule) return;
-        setStatistiques(moi.statistiques);
-        setProduits(produitsActifs);
+    apiFetch<ReponseFournisseurMoi>("/fournisseur/moi", { token })
+      .then((moi) => {
+        if (!annule) setStatistiques(moi.statistiques);
       })
       .catch(() => {
-        if (!annule) {
-          setStatistiques(null);
-          setProduits([]);
-        }
-      })
-      .finally(() => {
-        if (!annule) setChargement(false);
+        if (!annule) setStatistiques(null);
       });
-
     return () => {
       annule = true;
     };
+  }, [token]);
+
+  function chargerProduitsActifs() {
+    if (!token) return;
+    apiFetch<ProduitActif[]>("/produits/activite-recente", { token })
+      .then(setProduits)
+      .catch(() => setProduits([]));
+  }
+
+  useEffect(() => {
+    chargerProduitsActifs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chargerProduitsActifs lit `token` via clôture, pas besoin de la lister.
   }, [token]);
 
   useEffect(() => {
@@ -152,13 +153,15 @@ export function EcranCommandes() {
 
       {onglet === "chat" ? (
         <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
-          {chargement ? (
+          {produits === null ? (
             <p className="py-6 text-center text-sm text-brand-muted">Chargement…</p>
           ) : produits.length === 0 ? (
             <p className="py-6 text-center text-sm text-brand-muted">Aucune activité pour l&apos;instant.</p>
-          ) : (
-            produits.map((produit) => <CarteProduitActif key={produit.produit_id} produit={produit} />)
-          )}
+          ) : token ? (
+            produits.map((produit) => (
+              <CarteProduitActif key={produit.produit_id} produit={produit} token={token} onChange={chargerProduitsActifs} />
+            ))
+          ) : null}
         </div>
       ) : (
         <>

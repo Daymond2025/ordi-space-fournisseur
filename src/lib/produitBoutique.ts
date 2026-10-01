@@ -48,7 +48,7 @@ export const TYPES_LIVRAISON: { valeur: "physique" | "numerique"; label: string 
 // Du plus bas (vieux PC/Chromebook d'entrée de gamme) au plus récent, pour
 // couvrir tout le parc d'occasion revendu, pas seulement le haut de gamme.
 export const PROCESSEURS = [
-  "Intel Atom", "Intel Celeron", "Intel Pentium", "MediaTek / Chromebook",
+  "Intel Atom", "Intel Celeron", "Intel Pentium", "Dual Core", "MediaTek / Chromebook",
   "Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core i9",
   "AMD A-Series", "AMD Ryzen 3", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9",
   "Apple M1", "Apple M2", "Apple M3", "Apple M4", "Autre",
@@ -59,7 +59,7 @@ export const CARTES_GRAPHIQUES = [
 ];
 // 1GB/2GB inclus pour les machines d'entrée de gamme (Chromebook, vieux PC).
 export const RAMS = ["1GB", "2GB", "4GB", "8GB", "16GB", "32GB", "64GB"];
-export const TAILLES_ECRAN = ["11\"", "12\"", "13\"", "14\"", "15.6\"", "17\""];
+export const TAILLES_ECRAN = ["10\"", "11\"", "12\"", "13\"", "14\"", "15.6\"", "17\""];
 export const SYSTEMES_EXPLOITATION = ["Windows 10", "Windows 11", "macOS", "Linux", "Chrome OS", "Sans système"];
 export const TYPES_DISQUE = ["SSD", "HDD"];
 /** Palette visuelle (pastille de couleur) plutôt qu'une simple liste de texte brut ; `hex: null` = "Autre" (pas de pastille, couleur non standard). */

@@ -88,6 +88,8 @@ export type ProduitActif = {
   statistiques: StatistiquesProduit;
   derniere_activite: string | null;
   nouvelles_activites: number;
+  /** Reste en tête de liste quelle que soit son activité — voir MessageController::produitsActifs(). */
+  epingle: boolean;
 };
 
 export type PeriodeEspace = "aujourd_hui" | "semaine" | "semaine_derniere" | "mois" | "tout";
@@ -241,6 +243,8 @@ export type CommandeDetail = {
   date_commande: string;
   frais_livraison: number;
   livraison?: { statut_livraison: string } | null;
+  /** Une seule ligne en pratique côté Fournisseur (vente mono-produit) — sert juste à retrouver l'id du produit pour la redirection vers sa fiche (voir EcranCommande.tsx). */
+  lignes: { produit: { id: number } }[];
 };
 
 /**

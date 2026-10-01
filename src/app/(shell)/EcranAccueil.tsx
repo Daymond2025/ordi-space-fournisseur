@@ -83,15 +83,14 @@ export function EcranAccueil() {
     };
   }, [token]);
 
-  useEffect(() => {
+  function chargerProduitsActifs() {
     if (!token) return;
-    let annule = false;
-    apiFetch<ProduitActif[]>("/produits/activite-recente", { token }).then((data) => {
-      if (!annule) setProduits(data);
-    });
-    return () => {
-      annule = true;
-    };
+    apiFetch<ProduitActif[]>("/produits/activite-recente", { token }).then(setProduits);
+  }
+
+  useEffect(() => {
+    chargerProduitsActifs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chargerProduitsActifs lit `token` via clôture, pas besoin de la lister (sinon redéfinie à chaque rendu).
   }, [token]);
 
   const nomComplet = profil ? `${profil.prenom ?? ""} ${profil.nom}`.trim().toUpperCase() : "";
@@ -162,9 +161,11 @@ export function EcranAccueil() {
           <p className="py-6 text-center text-sm text-brand-muted">Chargement…</p>
         ) : produits.length === 0 ? (
           <p className="py-6 text-center text-sm text-brand-muted">Aucune activité récente pour l&apos;instant.</p>
-        ) : (
-          produits.map((produit) => <CarteProduitActif key={produit.produit_id} produit={produit} />)
-        )}
+        ) : token ? (
+          produits.map((produit) => (
+            <CarteProduitActif key={produit.produit_id} produit={produit} token={token} onChange={chargerProduitsActifs} />
+          ))
+        ) : null}
       </div>
     </div>
   );

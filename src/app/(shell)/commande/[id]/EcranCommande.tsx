@@ -104,6 +104,8 @@ export function EcranCommande({ commandeId }: { commandeId: number }) {
   }
 
   const titre = commande ? (LIBELLES_STATUT[commande.statut_commande] ?? commande.statut_commande) : "Commande";
+  // Vente mono-produit côté Fournisseur — une seule ligne en pratique.
+  const produitId = commande?.lignes[0]?.produit.id ?? null;
 
   function partagerCommande() {
     if (!apercu) return;
@@ -141,30 +143,41 @@ export function EcranCommande({ commandeId }: { commandeId: number }) {
         </div>
 
         {apercu ? (
-          <div className="mt-3 flex gap-2.5 rounded-[9px] bg-white p-2.5" style={{ boxShadow: "1px 1px 2px 0px rgba(0, 0, 0, 0.25)" }}>
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[9px] bg-[#F6F8FE]">
-              {apercu.photo ? (
-                <Image src={apercu.photo} alt={apercu.nom_produit} fill className="object-cover" sizes="56px" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-brand-muted">
-                  <MonitorIcon className="h-6 w-6" />
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-brand-ink">{apercu.nom_produit}</p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <span className="rounded-full bg-[#F5F7FA] px-2.5 py-1 text-xs font-semibold text-brand-ink">{apercu.nom_client}</span>
-                {apercu.zone_livraison ? (
-                  <span className="rounded-full bg-[#F5F7FA] px-2.5 py-1 text-xs font-semibold text-brand-muted">{apercu.zone_livraison}</span>
-                ) : null}
+          <div className="mt-3 rounded-[9px] bg-white p-2.5" style={{ boxShadow: "1px 1px 2px 0px rgba(0, 0, 0, 0.25)" }}>
+            {/* Le produit (photo + nom + badges) mène à sa fiche (retour de
+                test réel) — le téléphone reste un lien `tel:` séparé, un
+                <button> ne pouvant pas englober un autre élément interactif. */}
+            <button
+              type="button"
+              onClick={() => produitId && router.push(`/produits/${produitId}/detail`)}
+              disabled={!produitId}
+              aria-label="Voir la fiche produit"
+              className="flex w-full gap-2.5 text-left"
+            >
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[9px] bg-[#F6F8FE]">
+                {apercu.photo ? (
+                  <Image src={apercu.photo} alt={apercu.nom_produit} fill className="object-cover" sizes="56px" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-brand-muted">
+                    <MonitorIcon className="h-6 w-6" />
+                  </div>
+                )}
               </div>
-              {apercu.telephone ? (
-                <a href={`tel:${apercu.telephone}`} className="mt-1.5 block text-sm font-semibold text-[color:var(--brand-blue-end)]">
-                  {apercu.telephone}
-                </a>
-              ) : null}
-            </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-brand-ink">{apercu.nom_produit}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  <span className="rounded-full bg-[#F5F7FA] px-2.5 py-1 text-xs font-semibold text-brand-ink">{apercu.nom_client}</span>
+                  {apercu.zone_livraison ? (
+                    <span className="rounded-full bg-[#F5F7FA] px-2.5 py-1 text-xs font-semibold text-brand-muted">{apercu.zone_livraison}</span>
+                  ) : null}
+                </div>
+              </div>
+            </button>
+            {apercu.telephone ? (
+              <a href={`tel:${apercu.telephone}`} className="ml-[66px] mt-1.5 block text-sm font-semibold text-[color:var(--brand-blue-end)]">
+                {apercu.telephone}
+              </a>
+            ) : null}
           </div>
         ) : null}
 

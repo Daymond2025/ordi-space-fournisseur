@@ -135,13 +135,18 @@ export function EcranMesProduits() {
           </div>
         </div>
 
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+        {/* grid-cols-4 (pas de défilement ni de retour à la ligne, retour de
+            test réel) : chaque onglet occupe exactement 1/4 de la largeur
+            disponible, police/espacement réduits pour que "Indisponible"
+            (le plus long) tienne toujours sur une seule ligne, quelle que
+            soit la largeur d'écran — `truncate` en filet de sécurité ultime. */}
+        <div className="mt-2 grid grid-cols-4 gap-1 pb-1">
           {ONGLETS.map((onglet) => (
             <button
               key={onglet.valeur}
               type="button"
               onClick={() => setFiltre(onglet.valeur)}
-              className={`h-9 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors ${
+              className={`h-8 truncate rounded-full px-1 text-[10px] font-semibold transition-colors ${
                 filtre === onglet.valeur ? "bg-gradient-espace text-white" : "bg-[#F5F7FA] text-brand-ink"
               }`}
             >
