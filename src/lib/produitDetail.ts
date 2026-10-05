@@ -36,7 +36,6 @@ export type ProduitDetailComplet = {
   prix_vente: string | null;
   prix_barre: string | null;
   pourcentage_reduction: number | null;
-  commission_revente: string | null;
   etat_produit: EtatProduitDetail | null;
   quantite_stock: number;
   type_livraison: "physique" | "numerique";

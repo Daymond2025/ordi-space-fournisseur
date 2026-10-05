@@ -48,11 +48,12 @@ const OMBRE_CARTE = "0px 1px 2px 0px rgba(0, 0, 0, 0.05)";
  * fiche (et échoueraient : ce sont des permissions livreur) : l'en-tête
  * retour/partage (déjà géré par l'écran Centre de paiement), "Je passe la
  * commande", le lien affilié, la carte "Fournisseur" (contact — le
- * fournisseur n'a pas besoin de se contacter lui-même). Le bloc "Commission"
- * ci-dessous reste affiché : c'est `commission_revente` (ce qu'un LIVREUR
- * toucherait en revendant ce produit sur sa Boutique) — un montant différent
- * et sans lien avec la commission que LE FOURNISSEUR doit sur ses achats
- * externes (voir le reste de cet écran, `centre-paiement`).
+ * fournisseur n'a pas besoin de se contacter lui-même), et désormais toute
+ * commission de revente — c'est entièrement la main du Coordinateur (retour
+ * de test réel), le livreur ayant rejoint le maintenancier comme "apporteur
+ * d'affaire" (commission_apporteur, retour du PDG), sans plus aucun rapport
+ * avec ce que le fournisseur doit sur ses achats externes (voir le reste de
+ * cet écran, `centre-paiement`).
  */
 export function InfosProduit({ produitId }: { produitId: number }) {
   const { token } = useAuth();
