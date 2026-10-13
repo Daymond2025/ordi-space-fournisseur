@@ -44,7 +44,10 @@ export function EcranMotDePasseOublie() {
 
     setChargement(true);
     try {
-      await apiFetch("/auth/mot-de-passe/oublie", { method: "POST", body: { email: email.trim() } });
+      await apiFetch("/auth/mot-de-passe/oublie", {
+        method: "POST",
+        body: { email: email.trim(), type_utilisateur: "fournisseur" },
+      });
       setEtape("code");
     } catch (e) {
       setErreur(e instanceof ApiRequestError ? e.message : "Impossible d'envoyer le code. Vérifiez votre connexion internet.");
@@ -74,7 +77,13 @@ export function EcranMotDePasseOublie() {
     try {
       await apiFetch("/auth/mot-de-passe/reinitialiser", {
         method: "POST",
-        body: { email: email.trim(), code, password: motDePasse, password_confirmation: confirmationMotDePasse },
+        body: {
+          email: email.trim(),
+          code,
+          password: motDePasse,
+          password_confirmation: confirmationMotDePasse,
+          type_utilisateur: "fournisseur",
+        },
       });
       setEtape("confirmation");
     } catch (e) {

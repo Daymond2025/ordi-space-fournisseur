@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     const reponse = await apiFetch<SessionResult>("/auth/login", {
       method: "POST",
-      body: { email, password, device_name: NOM_APPAREIL },
+      body: { email, password, device_name: NOM_APPAREIL, type_utilisateur: "fournisseur" },
     });
 
     accesRefuseSiRoleInvalide(reponse.user);
