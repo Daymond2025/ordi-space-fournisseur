@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import { EcranInscription } from "./EcranInscription";
 
 export default function InscriptionPage() {
-  return <EcranInscription />;
+  return (
+    <Suspense>
+      <EcranInscription />
+    </Suspense>
+  );
 }

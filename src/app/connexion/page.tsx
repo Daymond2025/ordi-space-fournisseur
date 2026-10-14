@@ -1,5 +1,5 @@
-import { EcranConnexion } from "./EcranConnexion";
+import { FormulaireConnexion } from "./FormulaireConnexion";
 
 export default function ConnexionPage() {
-  return <EcranConnexion />;
+  return <FormulaireConnexion />;
 }
