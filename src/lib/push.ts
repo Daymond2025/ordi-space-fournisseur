@@ -1,13 +1,15 @@
 import { apiFetch } from "@/lib/api";
 
-/** Le navigateur supporte-t-il les notifications push web ? (Safari iOS < 16.4, navigateurs anciens : non.) */
+/** Le navigateur supporte-t-il les notifications push ? (iPhone : seulement l'app installée sur l'écran d'accueil.) */
 export function verifierSupportPush(): boolean {
-  return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+  return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 }
 
-// L'API Push attend la clé VAPID en Uint8Array, la nôtre est transmise en
-// base64 URL-safe (format standard des clés VAPID) — conversion nécessaire,
-// aucune lib externe pour ça dans le projet.
+export function permissionNotifications(): NotificationPermission | "non-supporte" {
+  return verifierSupportPush() ? Notification.permission : "non-supporte";
+}
+
+// Clé VAPID transmise en base64 URL-safe, attendue en Uint8Array par l'API Push.
 function urlBase64VersUint8Array(base64: string): Uint8Array {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const base64Normalise = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -16,31 +18,26 @@ function urlBase64VersUint8Array(base64: string): Uint8Array {
 }
 
 /**
- * Demande la permission de notification puis abonne ce navigateur aux
- * notifications push — appelé au moment où l'utilisateur exprime
- * explicitement vouloir être alerté (ex. passage "disponible" côté Livreur).
- * Échec silencieux (permission refusée, navigateur non supporté...) : ce
- * n'est jamais bloquant pour le reste de l'app.
+ * Abonne ce navigateur aux notifications push pour l'utilisateur connecté.
+ * `demander` : affiche la demande d'autorisation du navigateur (uniquement
+ * après un geste de l'utilisateur) ; sinon, n'abonne que si l'autorisation
+ * est déjà accordée. Échec silencieux : jamais bloquant pour l'app.
  */
-export async function sAbonnerAuxPush(token: string): Promise<void> {
-  if (!verifierSupportPush()) return;
+export async function sAbonnerAuxPush(token: string, demander = false): Promise<NotificationPermission | "non-supporte"> {
+  if (!verifierSupportPush()) return "non-supporte";
 
   try {
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") return;
+    const permission = demander ? await Notification.requestPermission() : Notification.permission;
+    if (permission !== "granted") return permission;
 
     const registration = await navigator.serviceWorker.ready;
     const { cle_publique } = await apiFetch<{ cle_publique: string }>("/push/cle-publique", { token });
-    if (!cle_publique) return;
+    if (!cle_publique) return permission;
 
     let abonnement = await registration.pushManager.getSubscription();
     if (!abonnement) {
       abonnement = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        // Cast nécessaire : lib.dom.d.ts type applicationServerKey en
-        // BufferSource<ArrayBuffer> strict, incompatible avec le
-        // Uint8Array<ArrayBufferLike> renvoyé ici — sans conséquence à
-        // l'exécution (l'API Push accepte bien un Uint8Array classique).
         applicationServerKey: urlBase64VersUint8Array(cle_publique) as BufferSource,
       });
     }
@@ -51,8 +48,8 @@ export async function sAbonnerAuxPush(token: string): Promise<void> {
       token,
       body: { endpoint: donnees.endpoint, keys: donnees.keys },
     });
+    return permission;
   } catch {
-    // Permission refusée, service worker indisponible, échec réseau...
-    // — jamais bloquant pour l'action qui a déclenché l'abonnement.
+    return permissionNotifications();
   }
 }

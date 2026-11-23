@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { CarteStatistique } from "@/components/space/CarteStatistique";
 import { SelecteurPeriode } from "@/components/space/SelecteurPeriode";
+import { ClocheNotifications } from "@/components/notifications/Notifications";
 import { CarteProduitActif } from "@/components/space/CarteProduitActif";
 import { UserIcon } from "@/components/icons";
 import type {
@@ -97,6 +98,9 @@ export function EcranAccueil() {
 
   return (
     <div>
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white">
       <div className="bg-gradient-espace relative rounded-b-[22px] px-4 pb-14 pt-6 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -119,7 +123,10 @@ export function EcranAccueil() {
             </div>
           </div>
 
-          <SelecteurPeriode value={periode} onChange={setPeriode} />
+          <div className="flex items-center gap-2">
+            <ClocheNotifications className="bg-white/15 text-white" />
+            <SelecteurPeriode value={periode} onChange={setPeriode} />
+          </div>
         </div>
       </div>
 
@@ -128,7 +135,7 @@ export function EcranAccueil() {
           naturelle juste après le header, seules les cartes remontent dessus
           (translateY négatif), ce qui laisse le bord arrondi du container
           visible sous elles, exactement comme le mockup. */}
-      <div className="relative rounded-[21px] bg-white px-3 pb-3" style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}>
+      <div className="relative bg-white px-3 pb-3">
         <div className="relative" style={{ height: "44px" }}>
           <div className="absolute inset-x-0 flex gap-3" style={{ transform: "translateY(-52px)" }}>
             <CarteStatistique
@@ -155,6 +162,10 @@ export function EcranAccueil() {
           </div>
         </div>
       </div>
+      </div>
+
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
 
       <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
         {produits === null ? (
