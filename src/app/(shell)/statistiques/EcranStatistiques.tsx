@@ -110,6 +110,9 @@ export function EcranStatistiques() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white">
       <div className="bg-gradient-espace shrink-0 rounded-b-[30px] px-4 pb-10 pt-4 text-white">
         <div className="flex items-center gap-2">
           <button
@@ -164,12 +167,16 @@ export function EcranStatistiques() {
         <CarteStatistique type="montant" couleur="blue" valeur={formaterDot(stats?.commission_ordispace ?? 0, "F")} label="Commission Ordi'space" />
       </div>
 
-      <div className="mx-4 mt-5 flex items-center justify-between border-b border-brand-line pb-2 text-sm text-brand-muted">
+      <div className="mx-4 mt-5 flex items-center justify-between pb-3 text-sm text-brand-muted">
         <span>Produit les plus vendus</span>
         <span className="font-bold text-brand-ink">{stats?.produits_distincts_vendus ?? 0}</span>
       </div>
+      </div>
 
-      <div className="mx-4 mb-6 rounded-2xl bg-white px-4" style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}>
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
+
+      <div className="mx-4 mb-6 mt-4 rounded-2xl bg-white px-4" style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}>
         {chargement ? (
           <p className="py-6 text-center text-sm text-brand-muted">Chargement…</p>
         ) : (stats?.produits_plus_vendus.length ?? 0) === 0 ? (

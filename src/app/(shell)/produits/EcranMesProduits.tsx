@@ -87,6 +87,9 @@ export function EcranMesProduits() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white">
       <div className="bg-gradient-espace relative shrink-0 rounded-b-[22px] px-4 pb-24 pt-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -126,7 +129,7 @@ export function EcranMesProduits() {
         ) : null}
       </div>
 
-      <div className="relative rounded-[21px] bg-white px-3 pb-3" style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}>
+      <div className="relative bg-white px-3 pb-3">
         <div className="relative" style={{ height: "55px" }}>
           <div className="absolute inset-x-0 grid grid-cols-3 justify-items-center gap-3" style={{ transform: "translateY(-60px)" }}>
             <CarteStatistiqueCatalogue variante="total" valeur={stats?.total ?? 0} label="Total Produit" />
@@ -155,6 +158,10 @@ export function EcranMesProduits() {
           ))}
         </div>
       </div>
+      </div>
+
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
 
       <div className="relative flex-1 px-4 py-4">
         <div className="grid grid-cols-2 gap-3 pb-6">

@@ -142,6 +142,9 @@ export function EcranLivreurs() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white pb-4">
       <div className="bg-gradient-espace shrink-0 rounded-b-[22px] px-4 pb-5 pt-4 text-white">
         <div className="flex items-center gap-2">
           <button
@@ -191,6 +194,10 @@ export function EcranLivreurs() {
           );
         })}
       </div>
+      </div>
+
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
 
       <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
         {chargement ? (

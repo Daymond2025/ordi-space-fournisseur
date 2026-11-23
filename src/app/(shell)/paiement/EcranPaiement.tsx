@@ -182,6 +182,9 @@ export function EcranPaiement() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white">
       <div className="bg-gradient-espace shrink-0 rounded-b-[30px] px-[26.5px] pt-4 text-white" style={{ height: "191px" }}>
         <div className="flex items-center gap-2">
           <button
@@ -219,7 +222,7 @@ export function EcranPaiement() {
           structure de EcranMesProduits.tsx. Cartes réduites (100×90) avec un
           plus grand espacement entre elles, et un léger espace vide (pas de
           "collé") entre le bas du rectangle "Soldes" et le haut des cartes. */}
-      <div className="relative rounded-[21px] bg-white px-3 pb-3" style={{ boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" }}>
+      <div className="relative bg-white px-3 pb-3">
         <div className="relative" style={{ height: "25px" }}>
           <div className="absolute inset-x-0 flex justify-center gap-4" style={{ transform: "translateY(-67px)" }}>
             <CarteStatistique
@@ -277,6 +280,10 @@ export function EcranPaiement() {
           })}
         </div>
       </div>
+      </div>
+
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
 
       <div className="flex flex-1 flex-col justify-between">
         <div className="flex flex-col gap-2.5 px-4 pb-4 pt-3">

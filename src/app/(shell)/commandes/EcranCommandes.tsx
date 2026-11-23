@@ -100,6 +100,9 @@ export function EcranCommandes() {
 
   return (
     <div>
+      {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
+          posé dessus, sans bande grise entre le header et le fond blanc. */}
+      <div className="shrink-0 bg-white pb-3">
       <div className="bg-gradient-espace relative rounded-b-[22px] px-4 pb-5 pt-6 text-white">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -150,6 +153,10 @@ export function EcranCommandes() {
           Commandes uniquement
         </button>
       </div>
+      </div>
+
+      {/* Ligne de séparation sur toute la largeur de l'écran. */}
+      <div className="h-px w-full shrink-0 bg-brand-line" />
 
       {onglet === "chat" ? (
         <div className="flex flex-col gap-2.5 px-4 pb-6 pt-4">
