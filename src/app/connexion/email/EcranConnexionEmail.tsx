@@ -1,13 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiRequestError } from "@/lib/api";
-import { ChampAuth } from "@/components/auth/ChampAuth";
-import { BoutonAuthCompact } from "@/components/auth/BoutonAuthCompact";
+import { CadreAuth, salutation } from "@/components/auth/kit/CadreAuth";
+import { ChampFlottant, IconeCadenas, IconeEnveloppe } from "@/components/auth/kit/ChampFlottant";
+import { BadgeSecurite, BoutonAuth, MessageErreur } from "@/components/auth/kit/BoutonAuth";
+import type { HumeurMascotte } from "@/components/auth/kit/MascotteVivante";
+import { THEME_AUTH } from "@/components/auth/kit/themeAuth";
+
+const FORMAT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /**
  * Connexion par e-mail + mot de passe — repli pour les comptes créés avant
@@ -18,91 +22,138 @@ import { BoutonAuthCompact } from "@/components/auth/BoutonAuthCompact";
 export function EcranConnexionEmail() {
   const { user, pret, login } = useAuth();
   const router = useRouter();
+  const r = THEME_AUTH.repliques;
 
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
+  const [compteurErreurs, setCompteurErreurs] = useState(0);
   const [chargement, setChargement] = useState(false);
+  const [focus, setFocus] = useState<"email" | "mdp" | null>(null);
+  const [accueil, setAccueil] = useState(true);
+  const [tentative, setTentative] = useState(false);
+  const emailValide = FORMAT_EMAIL.test(email.trim());
+  const succes = pret && Boolean(user) && tentative;
 
   useEffect(() => {
-    if (pret && user) router.replace("/");
-  }, [pret, user, router]);
+    if (!pret || !user) return;
+    if (!tentative) {
+      router.replace("/");
+      return;
+    }
+    const t = setTimeout(() => router.replace("/"), 1600);
+    return () => clearTimeout(t);
+  }, [pret, user, tentative, router]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setAccueil(false), 2600);
+    return () => clearTimeout(t);
+  }, []);
+
+  function signaler(message: string) {
+    setErreur(message);
+    setCompteurErreurs((n) => n + 1);
+    navigator.vibrate?.(120);
+  }
 
   async function onSoumettreConnexion(event: FormEvent) {
     event.preventDefault();
     setErreur(null);
 
     if (!email.trim() || !motDePasse) {
-      setErreur("Entre ton e-mail et ton mot de passe.");
+      signaler("Entre ton e-mail et ton mot de passe.");
       return;
     }
 
     setChargement(true);
+    setTentative(true);
     try {
-      await login(email, motDePasse);
+      await login(email.trim(), motDePasse);
     } catch (e) {
-      setErreur(e instanceof ApiRequestError ? e.message : "Impossible de se connecter. Vérifiez votre connexion internet.");
+      setTentative(false);
+      signaler(e instanceof ApiRequestError ? e.message : "Impossible de se connecter. Vérifiez votre connexion internet.");
     } finally {
       setChargement(false);
     }
   }
 
+  let humeur: HumeurMascotte = "repos";
+  let bulle = r.repos;
+  if (succes) {
+    humeur = "succes";
+    bulle = r.succes;
+  } else if (erreur) {
+    humeur = "erreur";
+    bulle = r.erreur;
+  } else if (focus === "mdp") {
+    humeur = "mdp";
+    bulle = r.mdp;
+  } else if (focus === "email") {
+    humeur = "saisie";
+    bulle = emailValide ? r.emailOk : r.email;
+  } else if (accueil) {
+    humeur = "salut";
+    bulle = `${salutation()} ! ${r.salut}`;
+  }
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col bg-white pb-10 md:my-6 md:min-h-[calc(100dvh-3rem)] md:max-h-[calc(100dvh-3rem)] md:overflow-y-auto md:rounded-[2rem] md:shadow-2xl md:shadow-slate-900/15 md:ring-1 md:ring-black/5">
-      <div className="bg-gradient-brand-blue relative flex flex-col items-center rounded-b-[2.5rem] px-6 pb-6 pt-6 text-white">
-        <h1 className="mt-2 text-center text-2xl font-extrabold leading-snug">
-          Connecte-toi
-          <br />à ton espace Fournisseur
-        </h1>
+    <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs} succes={succes}>
+      <form onSubmit={onSoumettreConnexion} className="flex flex-1 flex-col" noValidate>
+        <h2 className="text-2xl font-black text-slate-900">Connexion</h2>
+        <p className="mt-1.5 text-sm text-slate-500">Entre tes identifiants pour accéder à ton espace.</p>
 
-        <Image
-          src="/images/mascotte.png"
-          alt=""
-          width={275}
-          height={274}
-          className="mt-2 h-[178px] w-[179px] object-contain"
-          priority
-        />
-      </div>
-
-      <form onSubmit={onSoumettreConnexion} className="relative -mt-6 flex flex-1 flex-col rounded-t-[2rem] bg-white px-6 pb-8 pt-5">
-        <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-brand-line" />
-
-        <h2 className="text-center text-lg font-bold text-brand-ink">Entre tes identifiants</h2>
-
-        <div className="mt-8 flex flex-col gap-3.5">
-          <ChampAuth
+        <div className="mt-7 flex flex-col gap-4">
+          <ChampFlottant
             type="email"
+            label="Adresse e-mail"
             value={email}
-            onChange={setEmail}
-            placeholder="Adresse e-mail"
+            onChange={(v) => {
+              setEmail(v);
+              setErreur(null);
+            }}
+            icone={<IconeEnveloppe />}
+            valide={emailValide}
+            enErreur={Boolean(erreur) && !email.trim()}
+            declencheurErreur={compteurErreurs}
             autoComplete="email"
-            autoFocus
+            onFocus={() => setFocus("email")}
+            onBlur={() => setFocus(null)}
           />
-          <ChampAuth
+          <ChampFlottant
             type="password"
+            label="Mot de passe"
             value={motDePasse}
-            onChange={setMotDePasse}
-            placeholder="Mot de passe"
+            onChange={(v) => {
+              setMotDePasse(v);
+              setErreur(null);
+            }}
+            icone={<IconeCadenas />}
+            enErreur={Boolean(erreur)}
+            declencheurErreur={compteurErreurs}
             autoComplete="current-password"
-            erreur={erreur ?? undefined}
+            onFocus={() => setFocus("mdp")}
+            onBlur={() => setFocus(null)}
           />
         </div>
 
-        <Link href="/mot-de-passe-oublie" className="mt-3 text-center text-xs font-semibold text-brand-muted underline underline-offset-2">
+        <MessageErreur erreur={erreur} />
+
+        <Link href="/mot-de-passe-oublie" className="mt-3 self-end text-xs font-bold text-[var(--auth-accent)] underline-offset-2 hover:underline">
           Mot de passe oublié ?
         </Link>
 
-        <div className="flex-1" />
+        <div className="min-h-6 flex-1" />
 
-        <BoutonAuthCompact chargement={chargement} texteChargement="Vérification…" className="mt-10">
-          connexion
-        </BoutonAuthCompact>
+        <BoutonAuth type="submit" chargement={chargement} succes={succes} className="mt-8">
+          Se connecter
+        </BoutonAuth>
 
-        <Link href="/connexion" className="mt-4 text-center text-sm font-semibold text-brand-muted underline underline-offset-2">
-          Se connecter par numéro whatsapp
+        <Link href="/connexion" className="mt-4 text-center text-sm font-bold text-[var(--auth-accent)] underline-offset-2 hover:underline">
+          Se connecter par numéro WhatsApp
         </Link>
+
+        <BadgeSecurite texte="Connexion sécurisée" />
       </form>
-    </main>
+    </CadreAuth>
   );
 }

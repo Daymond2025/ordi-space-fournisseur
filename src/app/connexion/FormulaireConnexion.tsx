@@ -1,39 +1,55 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiRequestError } from "@/lib/api";
-import { ChampAuth } from "@/components/auth/ChampAuth";
-import { BoutonAuthCompact } from "@/components/auth/BoutonAuthCompact";
+import { CadreAuth, salutation } from "@/components/auth/kit/CadreAuth";
+import { ChampFlottant, IconeTelephone } from "@/components/auth/kit/ChampFlottant";
+import { BadgeSecurite, BoutonAuth, MessageErreur } from "@/components/auth/kit/BoutonAuth";
+import type { HumeurMascotte } from "@/components/auth/kit/MascotteVivante";
+import { THEME_AUTH } from "@/components/auth/kit/themeAuth";
 
 /**
- * Connexion par numéro + OTP WhatsApp — uniformisation de l'auth, même
- * mécanisme que le Client (voir Ordi’Space_App_Mobile/src/app/connexion).
- * Les comptes déjà créés par e-mail/mot de passe restent joignables via le
- * lien "Se connecter avec e-mail" ci-dessous (/connexion/email, ancien
- * EcranConnexion inchangé) — aucune migration forcée.
+ * Connexion par numéro + OTP WhatsApp — même mécanisme que le Client. Un
+ * numéro inconnu mène à l'inscription. Les comptes créés par e-mail/mot de
+ * passe restent joignables via "Se connecter avec e-mail" (/connexion/email).
  */
 export function FormulaireConnexion() {
   const { user, pret, demanderOtp } = useAuth();
   const router = useRouter();
+  const r = THEME_AUTH.repliques;
 
   const [telephone, setTelephone] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
+  const [compteurErreurs, setCompteurErreurs] = useState(0);
   const [chargement, setChargement] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const [accueil, setAccueil] = useState(true);
+  const numeroValide = telephone.replace(/\D/g, "").length >= 10;
 
   useEffect(() => {
     if (pret && user) router.replace("/");
   }, [pret, user, router]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setAccueil(false), 2600);
+    return () => clearTimeout(t);
+  }, []);
+
+  function signaler(message: string) {
+    setErreur(message);
+    setCompteurErreurs((n) => n + 1);
+    navigator.vibrate?.(120);
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setErreur(null);
 
     if (!telephone.trim()) {
-      setErreur("Entre ton numéro whatsapp.");
+      signaler("Entre ton numéro whatsapp.");
       return;
     }
 
@@ -50,49 +66,65 @@ export function FormulaireConnexion() {
         router.push(`/inscription?${params.toString()}`);
       }
     } catch (e) {
-      setErreur(e instanceof ApiRequestError ? e.message : "Impossible de se connecter. Vérifiez votre connexion internet.");
+      signaler(e instanceof ApiRequestError ? e.message : "Impossible de se connecter. Vérifiez votre connexion internet.");
     } finally {
       setChargement(false);
     }
   }
 
+  let humeur: HumeurMascotte = "repos";
+  let bulle = r.repos;
+  if (erreur) {
+    humeur = "erreur";
+    bulle = r.erreur;
+  } else if (focus) {
+    humeur = "saisie";
+    bulle = numeroValide ? r.telephoneOk : r.telephone;
+  } else if (accueil) {
+    humeur = "salut";
+    bulle = `${salutation()} ! ${r.salut}`;
+  }
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col bg-white pb-10 md:my-6 md:min-h-[calc(100dvh-3rem)] md:max-h-[calc(100dvh-3rem)] md:overflow-y-auto md:rounded-[2rem] md:shadow-2xl md:shadow-slate-900/15 md:ring-1 md:ring-black/5">
-      <div className="bg-gradient-brand-blue relative flex flex-col items-center rounded-b-[2.5rem] px-6 pb-6 pt-6 text-white">
-        <h1 className="mt-2 text-center text-2xl font-extrabold leading-snug">
-          Connecte-toi
-          <br />à ton espace Fournisseur
-        </h1>
+    <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs}>
+      <form onSubmit={onSubmit} className="flex flex-1 flex-col" noValidate>
+        <h2 className="text-2xl font-black text-slate-900">Connexion</h2>
+        <p className="mt-1.5 text-sm text-slate-500">Entre ton numéro WhatsApp : on t&apos;envoie un code.</p>
 
-        <Image
-          src="/images/mascotte.png"
-          alt=""
-          width={275}
-          height={274}
-          className="mt-2 h-[178px] w-[179px] object-contain"
-          priority
-        />
-      </div>
-
-      <form onSubmit={onSubmit} className="relative -mt-6 flex flex-1 flex-col rounded-t-[2rem] bg-white px-6 pb-8 pt-5">
-        <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-brand-line" />
-
-        <h2 className="text-center text-lg font-bold text-brand-ink">Entre ton numéro whatsapp</h2>
-
-        <div className="mt-8">
-          <ChampAuth type="tel" value={telephone} onChange={setTelephone} placeholder="Numéro whatsapp" autoComplete="tel" autoFocus erreur={erreur ?? undefined} />
+        <div className="mt-7">
+          <ChampFlottant
+            type="tel"
+            label="Numéro WhatsApp"
+            value={telephone}
+            onChange={(v) => {
+              setTelephone(v);
+              setErreur(null);
+            }}
+            icone={<IconeTelephone />}
+            indicatif
+            valide={numeroValide}
+            enErreur={Boolean(erreur)}
+            declencheurErreur={compteurErreurs}
+            autoComplete="tel-national"
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+          />
         </div>
 
-        <div className="flex-1" />
+        <MessageErreur erreur={erreur} />
 
-        <BoutonAuthCompact chargement={chargement} texteChargement="Vérification…" className="mt-10">
-          connexion
-        </BoutonAuthCompact>
+        <div className="min-h-6 flex-1" />
 
-        <Link href="/connexion/email" className="mt-4 text-center text-sm font-semibold text-brand-muted underline underline-offset-2">
+        <BoutonAuth type="submit" chargement={chargement} texteChargement="Envoi du code…" className="mt-8">
+          Recevoir mon code
+        </BoutonAuth>
+
+        <Link href="/connexion/email" className="mt-4 text-center text-sm font-bold text-[var(--auth-accent)] underline-offset-2 hover:underline">
           Se connecter avec e-mail et mot de passe
         </Link>
+
+        <BadgeSecurite texte={THEME_AUTH.badge} />
       </form>
-    </main>
+    </CadreAuth>
   );
 }

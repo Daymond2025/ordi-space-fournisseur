@@ -66,3 +66,375 @@ body {
     background-image: linear-gradient(90deg, var(--espace-blue-start), var(--espace-blue-end));
   }
 }
+
+/* ------------------------------------------------------------------------
+      Écran de connexion « vivant » (EcranConnexion.tsx, MascotteVivante.tsx) :
+   fond aurore animé, particules, mascotte qui flotte et réagit, confettis.
+   Uniquement du CSS (aucune bibliothèque). `prefers-reduced-motion` coupe
+   toutes ces animations. */
+@keyframes aurore-derive {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(8%, -6%) scale(1.15);
+  }
+  66% {
+    transform: translate(-6%, 5%) scale(0.95);
+  }
+}
+
+@keyframes particule-monte {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-120vh) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes mascotte-flotte {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes ombre-respire {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleX(0.75);
+    opacity: 0.18;
+  }
+}
+
+@keyframes mascotte-salut {
+  0% {
+    transform: translateY(40px) scale(0.6) rotate(-12deg);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(-18px) scale(1.06) rotate(6deg);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(0) scale(0.98) rotate(-4deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes mascotte-secoue {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes mascotte-saute {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-34px) scale(1.08) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(0) scale(0.94, 1.06);
+  }
+  70% {
+    transform: translateY(-16px) scale(1.04) rotate(5deg);
+  }
+}
+
+@keyframes bulle-pop {
+  0% {
+    transform: scale(0.6) translateY(6px);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes champ-secoue {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes confetti-tombe {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), 110vh) rotate(var(--rot));
+    opacity: 0.9;
+  }
+}
+
+@keyframes case-allume {
+  0% {
+    transform: scale(0.85);
+    box-shadow: 0 0 0 0 rgba(0, 119, 255, 0.5);
+  }
+  60% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(0, 119, 255, 0.15);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 119, 255, 0);
+  }
+}
+
+@keyframes reflet-glisse {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  60%,
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+
+@layer utilities {
+  .animate-aurore {
+    animation: aurore-derive 18s ease-in-out infinite;
+  }
+  .animate-particule {
+    animation: particule-monte linear infinite;
+  }
+  .animate-mascotte-flotte {
+    animation: mascotte-flotte 4s ease-in-out infinite;
+  }
+  .animate-ombre-respire {
+    animation: ombre-respire 4s ease-in-out infinite;
+  }
+  .animate-mascotte-salut {
+    animation: mascotte-salut 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .animate-mascotte-secoue {
+    animation: mascotte-secoue 0.6s ease-in-out both;
+  }
+  .animate-mascotte-saute {
+    animation: mascotte-saute 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .animate-bulle-pop {
+    animation: bulle-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .animate-champ-secoue {
+    animation: champ-secoue 0.45s ease-in-out both;
+  }
+  .animate-confetti {
+    animation: confetti-tombe var(--duree, 1.8s) cubic-bezier(0.25, 0.6, 0.4, 1) forwards;
+  }
+  .animate-case-allume {
+    animation: case-allume 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .animate-reflet {
+    animation: reflet-glisse 3.5s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurore,
+  .animate-particule,
+  .animate-mascotte-flotte,
+  .animate-ombre-respire,
+  .animate-mascotte-salut,
+  .animate-mascotte-secoue,
+  .animate-mascotte-saute,
+  .animate-bulle-pop,
+  .animate-champ-secoue,
+  .animate-confetti,
+  .animate-case-allume,
+  .animate-reflet {
+    animation: none !important;
+  }
+}
+
+/* Décors propres à chaque app (kit d'authentification, DecorAuth.tsx). */
+@keyframes carte-monte {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scintille {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vitesse {
+  from {
+    transform: translateX(110vw);
+  }
+  to {
+    transform: translateX(-40vw);
+  }
+}
+
+@keyframes route {
+  from {
+    transform: translate(0, -50%);
+  }
+  to {
+    transform: translate(-68px, -50%);
+  }
+}
+
+@keyframes balance {
+  0%,
+  100% {
+    transform: rotate(-8deg) translateY(0);
+  }
+  50% {
+    transform: rotate(8deg) translateY(-6px);
+  }
+}
+
+@keyframes radar {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes radar-local {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes mascotte-roule {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(0) rotate(3deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+}
+
+@layer utilities {
+  .animate-carte-monte {
+    animation: carte-monte 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-scintille {
+    animation: scintille 2.4s ease-in-out infinite;
+  }
+  .animate-tourne-lent {
+    animation: tourne 22s linear infinite;
+  }
+  .animate-tourne-inverse {
+    animation: tourne 16s linear infinite reverse;
+  }
+  .animate-vitesse {
+    animation: vitesse 2s linear infinite;
+  }
+  .animate-route {
+    animation: route 0.6s linear infinite;
+  }
+  .animate-balance {
+    animation: balance 3s ease-in-out infinite;
+  }
+  .animate-radar {
+    animation: radar 3.6s ease-out infinite;
+  }
+  .animate-mascotte-roule {
+    animation: mascotte-roule 1.4s ease-in-out infinite;
+  }
+  .animate-radar-local {
+    animation: radar-local 2.4s ease-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-carte-monte,
+  .animate-scintille,
+  .animate-tourne-lent,
+  .animate-tourne-inverse,
+  .animate-vitesse,
+  .animate-route,
+  .animate-balance,
+  .animate-radar,
+  .animate-mascotte-roule,
+  .animate-radar-local {
+    animation: none !important;
+  }
+}
