@@ -9,6 +9,7 @@ import { ChevronLeftIcon, MonitorIcon } from "@/components/icons";
 import { CarteCommandeDiscussion } from "@/components/discussion/CarteCommandeDiscussion";
 import { BulleMessage } from "@/components/discussion/BulleMessage";
 import { BarreDeSaisie } from "@/components/discussion/BarreDeSaisie";
+import { useDefilementBas } from "@/lib/defilement";
 import type { ConversationProduit, ItemFil, ProduitConversationHeader } from "@/lib/types";
 
 /**
@@ -84,7 +85,14 @@ export function EcranDiscussionProduit({ produitId }: { produitId: number }) {
     await recharger();
   }
 
-  const items: ItemFil[] = conversation?.items ?? [];
+  // L'API renvoie le fil du plus récent au plus ancien : affiché dans l'ordre
+  // chronologique (le plus récent en bas, comme WhatsApp), avec défilement
+  // automatique vers le bas tant qu'on suit la conversation.
+  const items: ItemFil[] = [...(conversation?.items ?? [])].reverse();
+  const dernier = items[items.length - 1];
+  const { ref: filRef, onScroll, allerEnBas } = useDefilementBas(
+    `${items.length}-${dernier ? (dernier.type === "commande" ? `c${dernier.donnee.commande_id}` : `m${dernier.donnee.id}`) : "vide"}`
+  );
   const nomProduit = produit?.nom_produit ?? `Produit #${produitId}`;
   const photo = produit?.images[0]?.url_image ?? null;
   const stats = conversation?.en_tete ?? { recues: 0, livrees: 0, annulees: 0, en_cours: 0 };
@@ -148,7 +156,7 @@ export function EcranDiscussionProduit({ produitId }: { produitId: number }) {
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-y-auto bg-[#f6f2ed]">
+      <div ref={filRef} onScroll={onScroll} className="relative flex-1 overflow-y-auto bg-[#f6f2ed]">
         <div className="space-y-3 px-3 py-4 pb-6">
           {chargement ? (
             <p className="py-10 text-center text-sm text-brand-muted">Chargement…</p>
@@ -166,7 +174,16 @@ export function EcranDiscussionProduit({ produitId }: { produitId: number }) {
         </div>
       </div>
 
-      <BarreDeSaisie onEnvoyer={envoyerMessage} onEnvoyerAudio={envoyerAudio} />
+      <BarreDeSaisie
+        onEnvoyer={async (texte) => {
+          await envoyerMessage(texte);
+          allerEnBas();
+        }}
+        onEnvoyerAudio={async (blob) => {
+          await envoyerAudio(blob);
+          allerEnBas();
+        }}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { MicIcon, SendIcon } from "@/components/icons";
+import { messageErreurApi } from "@/lib/api";
 
 type Props = {
   onEnvoyer: (texte: string) => Promise<void>;
@@ -18,9 +19,8 @@ function formaterDuree(secondes: number): string {
 }
 
 /**
- * Barre de saisie — copiée de
- * Cordinateur_App_Web/src/components/discussion/BarreDeSaisie.tsx (même
- * écran d'origine). Envoi de texte pleinement câblé, micro déclenche un vrai
+ * Barre de saisie — copiée de Cordinateur_App_Web/Ordi'Space_Fournisseur_App
+ * (même origine). Envoi de texte pleinement câblé, micro déclenche un vrai
  * enregistrement (MediaRecorder) quand `onEnvoyerAudio` est fourni.
  */
 export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAudio }: Props) {
@@ -28,6 +28,7 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
   const [envoi, setEnvoi] = useState(false);
   const [enregistrement, setEnregistrement] = useState<"inactif" | "en_cours" | "envoi">("inactif");
   const [duree, setDuree] = useState(0);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -40,9 +41,12 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
     if (!texte || envoi) return;
 
     setEnvoi(true);
+    setErreur(null);
     try {
       await onEnvoyer(texte);
       setValeur("");
+    } catch (e) {
+      setErreur(messageErreurApi(e));
     } finally {
       setEnvoi(false);
     }
@@ -57,13 +61,20 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
 
   async function demarrerEnregistrement() {
     if (!onEnvoyerAudio || enregistrement !== "inactif") return;
+    setErreur(null);
+
+    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setErreur("Les notes vocales ne sont pas prises en charge par ce navigateur.");
+      return;
+    }
 
     try {
       const flot = await navigator.mediaDevices.getUserMedia({ audio: true });
       flotRef.current = flot;
       chunksRef.current = [];
 
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : undefined;
+      // Chrome/Android : webm/opus ; Safari/iPhone : mp4 (pas de webm).
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((t) => MediaRecorder.isTypeSupported(t));
       const recorder = mimeType ? new MediaRecorder(flot, { mimeType }) : new MediaRecorder(flot);
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -77,6 +88,7 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
     } catch {
       arreterFlot();
       setEnregistrement("inactif");
+      setErreur("Micro inaccessible : autorise l'accès au micro pour ce site dans ton navigateur.");
     }
   }
 
@@ -102,8 +114,16 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
     });
     arreterFlot();
 
+    if (blob.size === 0) {
+      setEnregistrement("inactif");
+      setErreur("Enregistrement vide, réessaie en parlant un peu plus longtemps.");
+      return;
+    }
+
     try {
       await onEnvoyerAudio(blob);
+    } catch (e) {
+      setErreur(messageErreurApi(e));
     } finally {
       setEnregistrement("inactif");
     }
@@ -139,7 +159,13 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center gap-2 border-t border-brand-line bg-white px-3 py-2.5">
+    <div className="border-t border-brand-line bg-white">
+    {erreur ? (
+      <p role="alert" className="px-4 pt-2 text-xs font-semibold text-rose-500">
+        {erreur}
+      </p>
+    ) : null}
+    <form onSubmit={onSubmit} className="flex items-center gap-2 px-3 py-2.5">
       {iconeExtra ? (
         <button
           type="button"
@@ -172,5 +198,6 @@ export function BarreDeSaisie({ onEnvoyer, iconeExtra, onIconeExtra, onEnvoyerAu
         <SendIcon className="h-4 w-4" />
       </button>
     </form>
+    </div>
   );
 }

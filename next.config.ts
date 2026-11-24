@@ -23,6 +23,8 @@ const CSP = [
   `script-src ${scriptSrc}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: ${imgOrigins.join(" ")}`,
+  // Notes vocales : fichiers audio du backend + aperçu local (blob:) avant envoi.
+  `media-src 'self' blob: ${imgOrigins.join(" ")}`,
   "font-src 'self' data:",
   `connect-src 'self' ${API_ORIGIN}`,
   "frame-ancestors 'none'",

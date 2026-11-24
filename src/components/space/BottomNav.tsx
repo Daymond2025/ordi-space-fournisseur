@@ -16,32 +16,55 @@ const ONGLETS_DROITE = [
 
 function Onglet({ href, label, icone, actif }: { href: string; label: string; icone: string; actif: boolean }) {
   return (
-    <Link href={href} className="relative flex flex-1 flex-col items-center gap-1 py-2">
-      {/* `mask-image` (pas `filter: brightness(0)`) : recolore l'icône via
-          `background-color` quelle que soit sa couleur source (certaines ne
-          sont pas du noir pur), donc peut aussi bien la mettre en bleu
-          qu'en noir, juste à partir de son canal alpha. */}
+    <Link
+      href={href}
+      aria-current={actif ? "page" : undefined}
+      className="group relative flex flex-1 items-center justify-center py-1.5 [-webkit-tap-highlight-color:transparent]"
+    >
+      {/* Onglet actif : pastille arrondie bleu très clair avec une ombre bleue
+          douce, qui apparaît en fondu. Réactif : la pastille se resserre
+          légèrement à l'appui (active:scale) et l'icône grossit en douceur. */}
       <span
-        aria-hidden="true"
-        className="h-[22px] w-[22px] shrink-0"
-        style={{
-          backgroundColor: actif ? "var(--brand-blue-end)" : "#9CA3AF",
-          WebkitMaskImage: `url(${icone})`,
-          maskImage: `url(${icone})`,
-          WebkitMaskSize: "contain",
-          maskSize: "contain",
-          WebkitMaskRepeat: "no-repeat",
-          maskRepeat: "no-repeat",
-          WebkitMaskPosition: "center",
-          maskPosition: "center",
-        }}
-      />
-      <span className={`text-center text-[10px] font-medium leading-tight ${actif ? "text-[color:var(--brand-blue-end)]" : "text-brand-muted"}`}>
-        {label}
+        className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-1.5 transition-all duration-300 ease-out group-active:scale-90 ${
+          actif ? "bg-[#C2DCFF]" : "bg-transparent"
+        }`}
+        style={{ boxShadow: actif ? "0px 6px 18px 0px rgba(0, 119, 255, 0.6), 0px 2px 6px 0px rgba(0, 119, 255, 0.4), 0px 0px 0px 1.5px rgba(0, 119, 255, 0.25)" : "0px 0px 0px 0px rgba(0, 119, 255, 0)" }}
+      >
+        {/* Halo bleu de l'icône : filtre posé sur ce conteneur (sur l'icône
+            elle-même, le masque ci-dessous effacerait l'ombre). */}
+        <span
+          className={`flex shrink-0 transition-all duration-300 ease-out ${actif ? "-translate-y-0.5 scale-110" : ""}`}
+          style={{
+            filter: actif ? "drop-shadow(0px 4px 6px rgba(0, 119, 255, 0.85)) drop-shadow(0px 0px 9px rgba(0, 119, 255, 0.5))" : "none",
+          }}
+        >
+          {/* `mask-image` (pas `filter: brightness(0)`) : recolore l'icône via
+              `background-color` quelle que soit sa couleur source — même
+              technique que l'app Commercial (BottomNav.tsx), dont cet onglet reprend le style. */}
+          <span
+            aria-hidden="true"
+            className="h-[22px] w-[22px] shrink-0 transition-colors duration-300"
+            style={{
+              backgroundColor: actif ? "var(--brand-blue-end)" : "#9CA3AF",
+              WebkitMaskImage: `url(${icone})`,
+              maskImage: `url(${icone})`,
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+            }}
+          />
+        </span>
+        <span
+          className={`text-center text-[10px] leading-tight transition-colors duration-300 ${
+            actif ? "font-bold text-[color:var(--brand-blue-end)]" : "font-medium text-brand-muted"
+          }`}
+        >
+          {label}
+        </span>
       </span>
-      {actif ? (
-        <span aria-hidden="true" className="absolute bottom-0 h-[3px] w-8 rounded-full" style={{ background: "var(--brand-blue-end)" }} />
-      ) : null}
     </Link>
   );
 }
@@ -50,8 +73,8 @@ function Onglet({ href, label, icone, actif }: { href: string; label: string; ic
  * Nav du bas de l'app Fournisseur — 5 emplacements d'après le mockup de
  * l'accueil : Space / Livreurs / [bouton central surélevé] / Paiement / Mes
  * produits. Icônes fournies par l'utilisateur (public/images/{space,livreur,
- * paiement,boutique}.png). Onglet actif (retour de test réel) : icône ET
- * libellé en bleu + un trait bleu en bas de l'onglet (voir Onglet() ci-dessus).
+ * paiement,boutique}.png). Onglet actif : même style que l'app Commercial —
+ * pastille bleu clair avec ombre bleue, icône agrandie avec halo (voir Onglet()).
  * Affichée sur tous les écrans sauf "Détail produit" (voir (shell)/layout.tsx).
  * Dimensions/ombre exactes du mockup : 402×63, `box-shadow`
  * `0px -2px 4px 0px rgba(0,0,0,0.25)` (portée vers le haut) au lieu d'une

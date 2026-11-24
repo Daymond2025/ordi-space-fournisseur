@@ -11,6 +11,7 @@ import { ChevronLeftIcon, ChevronDownIcon, MonitorIcon, ShareIcon } from "@/comp
 import { DetailCommande } from "@/components/discussion/DetailCommande";
 import { BulleMessage } from "@/components/discussion/BulleMessage";
 import { BarreDeSaisie } from "@/components/discussion/BarreDeSaisie";
+import { useDefilementBas } from "@/lib/defilement";
 import { TimelineSuivi } from "@/components/commande/TimelineSuivi";
 import type { CommandeDetail, DonneesCommandeCreee, MessageConversation, SuiviEntree } from "@/lib/types";
 
@@ -35,7 +36,7 @@ function formaterDateCommande(iso: string): string {
  * marquerPreparee() lui-même.
  */
 export function EcranCommande({ commandeId }: { commandeId: number }) {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
 
   const [commande, setCommande] = useState<CommandeDetail | null>(null);
@@ -102,6 +103,14 @@ export function EcranCommande({ commandeId }: { commandeId: number }) {
     await apiFetch(`/commandes/${commandeId}/messages`, { method: "POST", token, body: formData });
     await chargerMessages();
   }
+
+  // L'API renvoie les messages du plus récent au plus ancien : affichés dans
+  // l'ordre chronologique (le plus récent en bas, comme WhatsApp), avec
+  // défilement automatique vers le bas tant qu'on suit la conversation.
+  const messagesChrono = [...messages].reverse();
+  const { ref: filRef, onScroll, enBas, allerEnBas } = useDefilementBas(
+    `${onglet}-${messagesChrono.length}-${messagesChrono[messagesChrono.length - 1]?.id ?? 0}-${suivi ? 1 : 0}`
+  );
 
   const titre = commande ? (LIBELLES_STATUT[commande.statut_commande] ?? commande.statut_commande) : "Commande";
   // Vente mono-produit côté Fournisseur — une seule ligne en pratique.
@@ -239,25 +248,37 @@ export function EcranCommande({ commandeId }: { commandeId: number }) {
         </div>
       ) : (
         <div className="relative flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 space-y-4 overflow-y-auto bg-[#f6f2ed] px-4 py-4">
+          <div ref={filRef} onScroll={onScroll} className="flex-1 space-y-4 overflow-y-auto bg-[#f6f2ed] px-4 py-4">
             <div className="rounded-[26px] bg-white p-4 shadow-sm shadow-slate-900/5">
               {suivi ? <TimelineSuivi entrees={suivi} /> : <p className="py-6 text-center text-sm text-brand-muted">Chargement…</p>}
             </div>
 
-            {messages.map((message) => (
-              <BulleMessage key={message.id} message={message} estMoi={false} />
+            {messagesChrono.map((message) => (
+              <BulleMessage key={message.id} message={message} estMoi={message.auteur_id === user?.id} />
             ))}
           </div>
 
-          <button
-            type="button"
-            aria-label="Revenir en bas"
-            className="absolute bottom-20 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg"
-          >
-            <ChevronDownIcon className="h-5 w-5" />
-          </button>
+          {!enBas ? (
+            <button
+              type="button"
+              onClick={() => allerEnBas(true)}
+              aria-label="Revenir en bas"
+              className="absolute bottom-20 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg"
+            >
+              <ChevronDownIcon className="h-5 w-5" />
+            </button>
+          ) : null}
 
-          <BarreDeSaisie onEnvoyer={envoyerMessage} onEnvoyerAudio={envoyerAudio} />
+          <BarreDeSaisie
+            onEnvoyer={async (texte) => {
+              await envoyerMessage(texte);
+              allerEnBas();
+            }}
+            onEnvoyerAudio={async (blob) => {
+              await envoyerAudio(blob);
+              allerEnBas();
+            }}
+          />
         </div>
       )}
     </div>

@@ -78,6 +78,19 @@ async function requete(
   return { data: json.data, meta: json.meta ?? {} };
 }
 
+/**
+ * Message d'erreur lisible pour l'utilisateur : le détail du premier champ
+ * refusé si l'API en renvoie un, sinon le message général. Même utilitaire
+ * que les apps Commercial et Coordinateur.
+ */
+export function messageErreurApi(e: unknown): string {
+  if (e instanceof ApiRequestError && e.fields) {
+    const premier = Object.values(e.fields)[0]?.[0];
+    if (premier) return premier;
+  }
+  return e instanceof Error ? e.message : "Une erreur est survenue.";
+}
+
 export async function apiFetch<T>(
   path: string,
   options: { method?: string; body?: unknown; token?: string } = {}

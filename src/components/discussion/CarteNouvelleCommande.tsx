@@ -16,7 +16,7 @@ export function CarteNouvelleCommande({ donnees }: { donnees: DonneesCommandeCre
   return (
     <div className="mx-4 overflow-hidden rounded-[9px] bg-white">
       <button type="button" onClick={() => setOuvert((v) => !v)} className="relative flex w-full items-center justify-center bg-black px-3.5 py-2.5">
-        <span className="text-xs font-extrabold uppercase tracking-wide text-white underline decoration-[color:var(--brand-blue-end)] decoration-2 underline-offset-4">
+        <span className="text-xs font-extrabold uppercase tracking-wide text-white">
           Nouvelle commande
         </span>
 

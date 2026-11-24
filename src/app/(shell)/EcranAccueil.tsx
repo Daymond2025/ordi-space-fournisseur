@@ -101,13 +101,13 @@ export function EcranAccueil() {
       {/* Fond blanc dès le haut de l'écran : le header (coins arrondis) est
           posé dessus, sans bande grise entre le header et le fond blanc. */}
       <div className="shrink-0 bg-white">
-      <div className="bg-gradient-espace relative rounded-b-[22px] px-4 pb-14 pt-6 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="bg-gradient-espace relative rounded-b-[22px] px-5 pb-[88px] pt-8 text-white">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3.5">
             <Link
               href="/profil"
               aria-label="Voir mon profil"
-              className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border-2 border-white/50 bg-white/20"
+              className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-white/50 bg-white/20"
             >
               {profil?.photo ? (
                 <Image src={profil.photo} alt="" fill className="object-cover" />
@@ -117,13 +117,13 @@ export function EcranAccueil() {
                 </div>
               )}
             </Link>
-            <div>
-              <p className="text-sm">Bonjour, 👋</p>
-              <p className="text-lg font-extrabold leading-tight">{profil ? nomComplet || "—" : "…"}</p>
+            <div className="min-w-0">
+              <p className="text-sm text-white/90">Bonjour, 👋</p>
+              <p className="mt-1 truncate text-lg font-extrabold leading-tight">{profil ? nomComplet || "—" : "…"}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2.5">
             <ClocheNotifications className="bg-white/15 text-white" />
             <SelecteurPeriode value={periode} onChange={setPeriode} />
           </div>
