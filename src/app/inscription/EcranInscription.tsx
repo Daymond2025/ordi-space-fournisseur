@@ -92,8 +92,8 @@ export function EcranInscription() {
           </div>
         </div>
 
-        <h2 className="mt-5 text-2xl font-black text-slate-900">Crée ton compte</h2>
-        <p className="mt-1.5 text-sm text-slate-500">
+        <h2 className="mt-5 text-center text-3xl font-black text-slate-900">Crée ton compte</h2>
+        <p className="mt-1.5 text-center text-sm text-slate-500">
           Espace Fournisseur
           {telephone ? <span className="font-bold text-[var(--auth-accent)]"> · +{telephone.replace(/^\+/, "")}</span> : null}
         </p>

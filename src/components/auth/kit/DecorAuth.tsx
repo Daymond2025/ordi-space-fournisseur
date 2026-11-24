@@ -68,7 +68,7 @@ function DecorParticulier() {
               style={{ top: `${8 + i * 9}%`, width: 40 + (i % 4) * 30, animationDuration: `${1.6 + (i % 4) * 0.5}s`, animationDelay: `${p.delai / 4}s` }}
             />
           ))}
-          <div className="absolute inset-x-0 top-[262px] h-9 bg-slate-900/25 md:bottom-0 md:top-auto md:h-16">
+          <div className="absolute inset-x-0 top-[222px] h-9 bg-slate-900/25 md:bottom-0 md:top-auto md:h-16">
             <div className="animate-route absolute top-1/2 h-1.5 w-[200%] -translate-y-1/2 [background:repeating-linear-gradient(90deg,rgba(255,255,255,0.85)_0_34px,transparent_34px_68px)]" />
           </div>
         </>

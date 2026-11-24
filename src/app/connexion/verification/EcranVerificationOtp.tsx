@@ -95,8 +95,8 @@ export function EcranVerificationOtp() {
     <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs} succes={succes}>
       <BoutonRetour onClick={() => router.back()} />
 
-      <h2 className="mt-3 text-2xl font-black text-slate-900">Vérification</h2>
-      <p className="mt-1.5 text-sm text-slate-500">
+      <h2 className="mt-3 text-center text-3xl font-black text-slate-900">Vérification</h2>
+      <p className="mt-1.5 text-center text-sm text-slate-500">
         Saisis le code reçu sur WhatsApp au{" "}
         <span className="font-bold text-[var(--auth-accent)]">{formaterTelephoneAffiche(telephone)}</span>.
       </p>

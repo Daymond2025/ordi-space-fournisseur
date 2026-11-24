@@ -56,7 +56,7 @@ export function ChampFlottant({
     <div>
       <div
         key={enErreur ? `e-${declencheurErreur}` : "ok"}
-        className={`relative flex h-[58px] items-center gap-3 rounded-2xl border-2 bg-white/90 px-4 backdrop-blur transition-all duration-300 ${
+        className={`relative flex h-[58px] items-center gap-3 rounded-2xl border-2 bg-white px-4 transition-all duration-300 ${
           enErreur
             ? "animate-champ-secoue border-rose-400 shadow-[0_0_0_4px_rgba(244,63,94,0.12)]"
             : focus

@@ -88,8 +88,8 @@ export function FormulaireConnexion() {
   return (
     <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs}>
       <form onSubmit={onSubmit} className="flex flex-1 flex-col" noValidate>
-        <h2 className="text-2xl font-black text-slate-900">Connexion</h2>
-        <p className="mt-1.5 text-sm text-slate-500">Entre ton numéro WhatsApp : on t&apos;envoie un code.</p>
+        <h2 className="text-center text-3xl font-black text-slate-900">Connexion</h2>
+        <p className="mt-1.5 text-center text-sm text-slate-500">Entre ton numéro WhatsApp : on t&apos;envoie un code.</p>
 
         <div className="mt-7">
           <ChampFlottant
@@ -113,9 +113,8 @@ export function FormulaireConnexion() {
 
         <MessageErreur erreur={erreur} />
 
-        <div className="min-h-6 flex-1" />
 
-        <BoutonAuth type="submit" chargement={chargement} texteChargement="Envoi du code…" className="mt-8">
+        <BoutonAuth type="submit" chargement={chargement} texteChargement="Envoi du code…" className="mt-10">
           Recevoir mon code
         </BoutonAuth>
 

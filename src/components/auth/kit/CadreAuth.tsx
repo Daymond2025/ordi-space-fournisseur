@@ -58,7 +58,7 @@ export function CadreAuth({ humeur, bulle, declencheur = 0, succes = false, chil
           </div>
         </section>
 
-        <section className="animate-carte-monte relative flex flex-1 flex-col rounded-t-[2.25rem] border border-white/40 bg-white/85 px-6 pb-8 pt-6 shadow-[0_-20px_60px_rgba(0,30,100,0.25)] backdrop-blur-xl md:w-[430px] md:flex-none md:rounded-[2.25rem] md:py-9 md:shadow-[0_30px_80px_rgba(0,30,100,0.35)]">
+        <section className="animate-carte-monte relative flex flex-1 flex-col rounded-t-[2.25rem] bg-white px-6 pb-8 pt-6 shadow-[0_-20px_60px_rgba(0,30,100,0.25)] md:w-[430px] md:flex-none md:rounded-[2.25rem] md:py-9 md:shadow-[0_30px_80px_rgba(0,30,100,0.35)]">
           <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-300/70 md:hidden" />
           {children}
         </section>

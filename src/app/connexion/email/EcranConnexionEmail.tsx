@@ -99,8 +99,8 @@ export function EcranConnexionEmail() {
   return (
     <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs} succes={succes}>
       <form onSubmit={onSoumettreConnexion} className="flex flex-1 flex-col" noValidate>
-        <h2 className="text-2xl font-black text-slate-900">Connexion</h2>
-        <p className="mt-1.5 text-sm text-slate-500">Entre tes identifiants pour accéder à ton espace.</p>
+        <h2 className="text-center text-3xl font-black text-slate-900">Connexion</h2>
+        <p className="mt-1.5 text-center text-sm text-slate-500">Entre tes identifiants pour accéder à ton espace.</p>
 
         <div className="mt-7 flex flex-col gap-4">
           <ChampFlottant
@@ -142,9 +142,8 @@ export function EcranConnexionEmail() {
           Mot de passe oublié ?
         </Link>
 
-        <div className="min-h-6 flex-1" />
 
-        <BoutonAuth type="submit" chargement={chargement} succes={succes} className="mt-8">
+        <BoutonAuth type="submit" chargement={chargement} succes={succes} className="mt-10">
           Se connecter
         </BoutonAuth>
 
