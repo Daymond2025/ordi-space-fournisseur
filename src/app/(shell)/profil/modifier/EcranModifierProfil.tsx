@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { ChevronLeftIcon } from "@/components/icons";
 import type { ProfilFournisseur } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 const CHAMP_CLASSE = "w-full rounded-2xl border border-brand-line px-4 py-3 text-sm text-brand-ink outline-none placeholder:text-brand-muted";
 
@@ -18,7 +18,8 @@ const CHAMP_CLASSE = "w-full rounded-2xl border border-brand-line px-4 py-3 text
  */
 export function EcranModifierProfil() {
   const { token } = useAuth();
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/profil");
 
   const [chargement, setChargement] = useState(true);
   const [adresseEntreprise, setAdresseEntreprise] = useState("");
@@ -75,7 +76,7 @@ export function EcranModifierProfil() {
           zone_couverte: zoneCouverte.trim() || null,
         },
       });
-      router.back();
+      retour();
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "Une erreur est survenue.");
     } finally {
@@ -86,7 +87,7 @@ export function EcranModifierProfil() {
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
       <div className="bg-gradient-espace flex h-[80px] shrink-0 items-center gap-3 px-4 text-white">
-        <button type="button" onClick={() => router.back()} aria-label="Retour" className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <button type="button" onClick={retour} aria-label="Retour" className="flex h-8 w-8 shrink-0 items-center justify-center">
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
         <p className="text-base font-extrabold leading-none">Modifier mon profil</p>

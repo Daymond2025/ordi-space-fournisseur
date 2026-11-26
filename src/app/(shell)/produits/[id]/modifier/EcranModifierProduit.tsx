@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -22,6 +21,7 @@ import {
 } from "@/lib/produitBoutique";
 import { BaremeLivraison, ajouterBaremeAuFormData } from "@/components/produit/BaremeLivraison";
 import { formaterPrix, type ProduitDetailComplet } from "@/lib/produitDetail";
+import { useRetour } from "@/lib/navigation";
 
 const CARTE_CLASSE = "rounded-2xl bg-white p-4";
 const CARTE_OMBRE = { boxShadow: "0px 1px 100px 0px rgba(29, 99, 224, 0.08)" };
@@ -41,7 +41,8 @@ const CHAMP_CLASSE = "w-full rounded-2xl border border-brand-line px-4 py-3 text
  */
 export function EcranModifierProduit({ produitId }: { produitId: number }) {
   const { token } = useAuth();
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour(`/produits/${produitId}/detail`);
   const fichierRef = useRef<HTMLInputElement>(null);
 
   const [produit, setProduit] = useState<ProduitDetailComplet | null>(null);
@@ -229,7 +230,7 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
 
     try {
       await apiFetch(`/produits/${produitId}`, { method: "POST", token, body: formData });
-      router.back();
+      retour();
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "Une erreur est survenue.");
     } finally {
@@ -240,7 +241,7 @@ export function EcranModifierProduit({ produitId }: { produitId: number }) {
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
       <div className="bg-gradient-espace flex h-[80px] shrink-0 items-center gap-3 px-4 text-white">
-        <button type="button" onClick={() => router.back()} aria-label="Retour" className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <button type="button" onClick={retour} aria-label="Retour" className="flex h-8 w-8 shrink-0 items-center justify-center">
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
         <p className="text-base font-extrabold leading-none">Modifier le produit</p>

@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { ChevronLeftIcon, PhoneFilledIcon, UserIcon, WhatsappIcon } from "@/components/icons";
 import { SheetDetailLivreur } from "@/components/livreur/SheetDetailLivreur";
 import type { LivreurListeFournisseur } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 const PALETTE_AVATAR = ["bg-blue-500", "bg-violet-500", "bg-fuchsia-500", "bg-amber-500", "bg-emerald-500"];
 
@@ -105,7 +105,8 @@ function CarteLivreur({ livreur, onSelectionner }: { livreur: LivreurListeFourni
  */
 export function EcranLivreurs() {
   const { token } = useAuth();
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
   const [livreurs, setLivreurs] = useState<LivreurListeFournisseur[]>([]);
   const [onglet, setOnglet] = useState<Onglet>("tous");
   const [chargement, setChargement] = useState(true);
@@ -149,7 +150,7 @@ export function EcranLivreurs() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="flex h-[31px] w-8 shrink-0 items-center justify-center rounded-[7px]"
             style={{ background: "rgba(255, 255, 255, 0.23)" }}

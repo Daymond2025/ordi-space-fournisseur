@@ -10,6 +10,7 @@ import { CarteCommandeFournisseur } from "@/components/operations/CarteCommandeF
 import { ChevronLeftIcon } from "@/components/icons";
 import { BUCKETS_COMMANDE, type BucketCommande } from "@/lib/statuts";
 import type { CommandeCarte, ProduitActif, StatistiquesFournisseurMoi } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 type ReponseFournisseurMoi = { statistiques: StatistiquesFournisseurMoi };
 
@@ -30,6 +31,8 @@ type ReponseCommandesFournisseur = {
 export function EcranCommandes() {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
 
   const [statistiques, setStatistiques] = useState<StatistiquesFournisseurMoi | null>(null);
   const [produits, setProduits] = useState<ProduitActif[] | null>(null);
@@ -108,7 +111,7 @@ export function EcranCommandes() {
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={retour}
               aria-label="Retour"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"
             >

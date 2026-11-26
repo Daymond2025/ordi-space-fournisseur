@@ -11,6 +11,7 @@ import { ChampFlottant, IconeBoutique, IconePersonne } from "@/components/auth/k
 import { BoutonAuth, BoutonRetour, Etapes, MessageErreur } from "@/components/auth/kit/BoutonAuth";
 import type { HumeurMascotte } from "@/components/auth/kit/MascotteVivante";
 import { THEME_AUTH } from "@/components/auth/kit/themeAuth";
+import { useRetour } from "@/lib/navigation";
 
 /**
  * Numéro inconnu à l'écran /connexion — finalise la création du compte par
@@ -22,6 +23,8 @@ import { THEME_AUTH } from "@/components/auth/kit/themeAuth";
 export function EcranInscription() {
   const { inscrireParTelephone } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/connexion");
   const searchParams = useSearchParams();
   const telephone = searchParams.get("telephone") ?? "";
   const r = THEME_AUTH.repliques;
@@ -86,7 +89,7 @@ export function EcranInscription() {
     <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs}>
       <form onSubmit={onSoumettre} className="flex flex-1 flex-col" noValidate>
         <div className="flex items-center gap-3">
-          <BoutonRetour onClick={() => router.back()} />
+          <BoutonRetour onClick={retour} />
           <div className="flex-1">
             <Etapes etapes={["Numéro", "Infos", "Code"]} active={1} />
           </div>

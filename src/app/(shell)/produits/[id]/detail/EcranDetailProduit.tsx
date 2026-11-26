@@ -9,6 +9,7 @@ import { ChevronLeftIcon } from "@/components/icons";
 import { InfosProduit } from "@/components/produit/InfosProduit";
 import { FeuilleMenuProduit } from "@/components/produit/FeuilleMenuProduit";
 import type { ProduitConversationHeader } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 function formaterDate(iso: string): string {
   const date = new Date(iso.replace(" ", "T"));
@@ -26,6 +27,8 @@ function formaterDate(iso: string): string {
 export function EcranDetailProduit({ produitId }: { produitId: number }) {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/produits");
   const [produit, setProduit] = useState<ProduitConversationHeader | null>(null);
   const [menuOuvert, setMenuOuvert] = useState(false);
   // Incrémenté après une action du menu (stock) pour forcer InfosProduit à
@@ -51,7 +54,7 @@ export function EcranDetailProduit({ produitId }: { produitId: number }) {
         <div className="flex w-full items-center gap-3">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="flex h-[31px] w-8 shrink-0 items-center justify-center rounded-[7px]"
             style={{ background: "rgba(255, 255, 255, 0.23)" }}

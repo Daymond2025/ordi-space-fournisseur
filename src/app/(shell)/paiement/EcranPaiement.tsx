@@ -16,6 +16,7 @@ import {
   type PaiementsFournisseur,
   type PeriodeEspace,
 } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 function formaterDateHeure(iso: string): { label: string; heure: string } {
   const date = new Date(iso.replace(" ", "T"));
@@ -123,6 +124,8 @@ function CartePaiement({ item, onSelectionner }: { item: PaiementItem; onSelecti
 export function EcranPaiement() {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
   const [periode, setPeriode] = useState<PeriodeEspace>("semaine");
   const [onglet, setOnglet] = useState<Onglet>("tous");
   const [donnees, setDonnees] = useState<PaiementsFournisseur | null>(null);
@@ -189,7 +192,7 @@ export function EcranPaiement() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="flex h-[31px] w-8 shrink-0 items-center justify-center rounded-[7px]"
             style={{ background: "rgba(255, 255, 255, 0.23)" }}

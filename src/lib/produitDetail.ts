@@ -53,6 +53,8 @@ export type ProduitDetailComplet = {
   /** Contenu matériel du carton (ex. "Sacoche", "Souris") — distinct de `cadeaux` (incitation marketing), voir la migration contenu_pack. */
   contenu_pack: string[] | null;
   categorie: { id: number; nom_categorie: string } | null;
+  /** Produit mis en avant par la coordination (badge « Booster », comme sur la fiche Commercial). */
+  est_booste?: boolean;
   images: ImageProduitDetail[];
   frais_livraison: FraisLivraisonProduitDetail[];
   statut_produit: string;

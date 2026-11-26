@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -8,6 +7,7 @@ import { ChevronLeftIcon } from "@/components/icons";
 import { BulleMessage } from "@/components/discussion/BulleMessage";
 import { BarreDeSaisie } from "@/components/discussion/BarreDeSaisie";
 import type { MessageConversation, ProduitConversationHeader } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 /**
  * "Négociation de prix" (app Fournisseur) — même écran que Cordinateur_App_Web/
@@ -24,7 +24,8 @@ import type { MessageConversation, ProduitConversationHeader } from "@/lib/types
  */
 export function EcranNegociationPrix({ produitId }: { produitId: number }) {
   const { user, token } = useAuth();
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour(`/produits/${produitId}/detail`);
   const [produit, setProduit] = useState<ProduitConversationHeader | null>(null);
   const [messages, setMessages] = useState<MessageConversation[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -88,7 +89,7 @@ export function EcranNegociationPrix({ produitId }: { produitId: number }) {
   return (
     <div className="flex h-full flex-col">
       <div className="bg-gradient-espace flex items-center gap-3 px-4 py-4 text-white">
-        <button type="button" onClick={() => router.back()} aria-label="Retour" className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <button type="button" onClick={retour} aria-label="Retour" className="flex h-8 w-8 shrink-0 items-center justify-center">
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
         <div>

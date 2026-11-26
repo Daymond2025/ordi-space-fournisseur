@@ -23,6 +23,7 @@ import {
 } from "@/components/icons";
 import { couleurAvatarFournisseur, initialesFournisseur } from "@/lib/avatarFournisseur";
 import type { ProfilFournisseur } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 const CARTE_CLASSE = "rounded-2xl bg-white";
 const CARTE_OMBRE = { boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)" };
@@ -84,6 +85,8 @@ function LigneMenu({ icone, iconeClasse, label }: { icone: ReactNode; iconeClass
 export function EcranProfil() {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
   const [profil, setProfil] = useState<ProfilFournisseur | null>(null);
 
   useEffect(() => {
@@ -109,7 +112,7 @@ export function EcranProfil() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="flex h-[31px] w-8 shrink-0 items-center justify-center rounded-[7px]"
             style={{ background: "rgba(255, 255, 255, 0.23)" }}

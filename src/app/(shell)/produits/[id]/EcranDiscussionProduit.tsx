@@ -11,6 +11,7 @@ import { BulleMessage } from "@/components/discussion/BulleMessage";
 import { BarreDeSaisie } from "@/components/discussion/BarreDeSaisie";
 import { useDefilementBas } from "@/lib/defilement";
 import type { ConversationProduit, ItemFil, ProduitConversationHeader } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 /**
  * Discussion produit — même logique de conversation que
@@ -25,6 +26,8 @@ import type { ConversationProduit, ItemFil, ProduitConversationHeader } from "@/
 export function EcranDiscussionProduit({ produitId }: { produitId: number }) {
   const { user, token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/produits");
   const [conversation, setConversation] = useState<ConversationProduit | null>(null);
   const [produit, setProduit] = useState<ProduitConversationHeader | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -103,7 +106,7 @@ export function EcranDiscussionProduit({ produitId }: { produitId: number }) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="flex h-8 w-8 shrink-0 items-center justify-center text-brand-ink"
           >

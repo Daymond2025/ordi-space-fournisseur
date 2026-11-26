@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiFetch, apiFetchAvecMeta, ApiRequestError } from "@/lib/api";
 import { ChevronLeftIcon, TruckIcon, XCircleIcon } from "@/components/icons";
 import { formaterMontant, type CommandeDetail, type DonneesCommandeCreee, type ProfilFournisseur } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 // Le vivier (voir CommandeController::marquerPreparee()/LivraisonController::index())
 // ne pousse rien au front : on vérifie nous-mêmes, à intervalle régulier, si
@@ -26,6 +27,8 @@ const INTERVALLE_POLLING_MS = 4000;
 export function EcranRechercheLivreur({ commandeId }: { commandeId: number }) {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour(`/commande/${commandeId}`);
 
   const [commande, setCommande] = useState<CommandeDetail | null>(null);
   const [apercu, setApercu] = useState<DonneesCommandeCreee | null>(null);
@@ -150,7 +153,7 @@ export function EcranRechercheLivreur({ commandeId }: { commandeId: number }) {
       <div className="flex items-center gap-3 border-b border-brand-line px-4 py-3">
         <button
           type="button"
-          onClick={() => router.push(`/commande/${commandeId}`)}
+          onClick={retour}
           aria-label="Retour"
           className="flex h-8 w-8 shrink-0 items-center justify-center text-brand-ink"
         >

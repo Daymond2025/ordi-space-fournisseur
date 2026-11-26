@@ -9,6 +9,7 @@ import { SaisieCodeOtp } from "@/components/auth/kit/SaisieCodeOtp";
 import { BoutonAuth, BoutonRetour, MessageErreur } from "@/components/auth/kit/BoutonAuth";
 import type { HumeurMascotte } from "@/components/auth/kit/MascotteVivante";
 import { THEME_AUTH } from "@/components/auth/kit/themeAuth";
+import { useRetour } from "@/lib/navigation";
 
 // Doit correspondre à OTP_LONGUEUR côté backend (app/Helpers/const.php).
 const LONGUEUR_CODE = 6;
@@ -21,6 +22,8 @@ function formaterTelephoneAffiche(telephone: string): string {
 export function EcranVerificationOtp() {
   const { demanderOtp, verifierOtpInscription } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/connexion");
   const searchParams = useSearchParams();
   const r = THEME_AUTH.repliques;
 
@@ -93,7 +96,7 @@ export function EcranVerificationOtp() {
 
   return (
     <CadreAuth humeur={humeur} bulle={bulle} declencheur={compteurErreurs} succes={succes}>
-      <BoutonRetour onClick={() => router.back()} />
+      <BoutonRetour onClick={retour} />
 
       <h2 className="mt-3 text-center text-3xl font-black text-slate-900">Vérification</h2>
       <p className="mt-1.5 text-center text-sm text-slate-500">

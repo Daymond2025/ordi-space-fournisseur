@@ -24,6 +24,7 @@ import {
   TYPES_LIVRAISON,
 } from "@/lib/produitBoutique";
 import { BaremeLivraison, ajouterBaremeAuFormData } from "@/components/produit/BaremeLivraison";
+import { useRetour } from "@/lib/navigation";
 
 const CARTE_CLASSE = "rounded-2xl bg-white p-4";
 const CARTE_OMBRE = { boxShadow: "0px 1px 100px 0px rgba(29, 99, 224, 0.08)" };
@@ -53,6 +54,8 @@ const CHAMP_CLASSE = "w-full rounded-2xl border border-brand-line px-4 py-3 text
  */
 export function EcranAjouterProduit() {
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/produits");
   const { token } = useAuth();
   const fichierRef = useRef<HTMLInputElement>(null);
 
@@ -236,7 +239,7 @@ export function EcranAjouterProduit() {
         <div className="bg-gradient-espace relative flex h-[238px] shrink-0 flex-col items-center px-4 pt-4 text-white">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="absolute left-4 top-4 flex h-8 w-8 shrink-0 items-center justify-center"
           >

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -20,6 +19,7 @@ import {
   type ProduitConversationHeader,
   type TransactionJourCentrePaiement,
 } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 function formaterDateCreation(iso: string): string {
   const date = new Date(iso.replace(" ", "T"));
@@ -52,7 +52,8 @@ function formaterLabelJour(dateStr: string): { label: string; date: string } {
  */
 export function EcranCentrePaiement({ produitId }: { produitId: number }) {
   const { token } = useAuth();
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour(`/produits/${produitId}`);
 
   const [produit, setProduit] = useState<ProduitConversationHeader | null>(null);
   const [donnees, setDonnees] = useState<CentrePaiementProduit | null>(null);
@@ -112,7 +113,7 @@ export function EcranCentrePaiement({ produitId }: { produitId: number }) {
     <div className="flex h-full flex-col overflow-y-auto bg-[#f2f5fa]">
       <div className="bg-gradient-espace shrink-0 rounded-b-[22px] px-3 pb-9 pt-4 text-white">
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => router.back()} aria-label="Retour" className="flex h-7 w-7 shrink-0 items-center justify-center">
+          <button type="button" onClick={retour} aria-label="Retour" className="flex h-7 w-7 shrink-0 items-center justify-center">
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
 

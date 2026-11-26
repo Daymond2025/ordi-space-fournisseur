@@ -1,10 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { ListeNotifications } from "@/components/notifications/Notifications";
+import { useRetour } from "@/lib/navigation";
 
 export default function NotificationsPage() {
-  const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
 
   return (
     <main className="min-h-full bg-white pb-6">
@@ -12,7 +13,7 @@ export default function NotificationsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={retour}
             aria-label="Retour"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-lg"
           >

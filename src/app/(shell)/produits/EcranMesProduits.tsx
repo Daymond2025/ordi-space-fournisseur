@@ -8,6 +8,7 @@ import { CarteStatistiqueCatalogue } from "@/components/produit/CarteStatistique
 import { CarteProduitCatalogue } from "@/components/produit/CarteProduitCatalogue";
 import { ChevronLeftIcon, SearchIcon } from "@/components/icons";
 import type { ProduitCatalogue, StatistiquesCatalogue } from "@/lib/types";
+import { useRetour } from "@/lib/navigation";
 
 type Filtre = "tous" | "non_publies" | "booster" | "indisponible";
 
@@ -31,6 +32,8 @@ const ONGLETS: { valeur: Filtre; label: string }[] = [
 export function EcranMesProduits() {
   const { token } = useAuth();
   const router = useRouter();
+  // Retour fiable même si la page a été ouverte directement (notification, lien, appli rouverte) — voir lib/navigation.ts.
+  const retour = useRetour("/");
   const [stats, setStats] = useState<StatistiquesCatalogue | null>(null);
   const [produits, setProduits] = useState<ProduitCatalogue[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -95,7 +98,7 @@ export function EcranMesProduits() {
           <div className="flex items-center gap-2.5">
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={retour}
               aria-label="Retour"
               className="flex h-[31px] w-8 shrink-0 items-center justify-center rounded-[7px]"
               style={{ background: "rgba(255, 255, 255, 0.23)" }}

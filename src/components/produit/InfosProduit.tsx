@@ -34,6 +34,29 @@ const STATUTS_NON_VALIDE: Record<string, { label: string; classe: string }> = {
 
 type IconeSpec = ComponentType<SVGProps<SVGSVGElement>>;
 
+/** Pastille de la rangée sous le header — même rendu que la fiche produit du Commercial. */
+function Badge({ couleur, label }: { couleur: "bleu" | "vert" | "rose" | "gris"; label: string }) {
+  const styles: Record<typeof couleur, string> = {
+    bleu: "border-blue-200 text-[color:var(--brand-blue-end)]",
+    vert: "border-green-200 text-green-600",
+    rose: "border-rose-200 text-rose-500",
+    gris: "border-brand-line text-brand-ink",
+  };
+  const dot: Record<typeof couleur, string> = {
+    bleu: "bg-blue-500",
+    vert: "bg-green-500",
+    rose: "bg-rose-500",
+    gris: "hidden",
+  };
+
+  return (
+    <span className={`flex items-center gap-1.5 rounded-full border bg-white px-3 py-1 text-xs font-semibold ${styles[couleur]}`}>
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot[couleur]}`} />
+      {label}
+    </span>
+  );
+}
+
 const OMBRE_CARTE = "0px 1px 2px 0px rgba(0, 0, 0, 0.05)";
 
 /**
@@ -104,11 +127,16 @@ export function InfosProduit({ produitId }: { produitId: number }) {
     produit.frais_livraison.length > 0 ? Math.min(...produit.frais_livraison.map((f) => Number(f.montant))) : null;
 
   const statut = STATUTS_NON_VALIDE[produit.statut_produit];
+  const enRupture = produit.quantite_stock <= 0;
 
   return (
     <div className="flex flex-col pb-6">
+      {/* Fond blanc net sous le header (comme la fiche Commercial) : statut de
+          validation, type de produit, disponibilité, quantité, photo
+          principale et miniatures. */}
+      <div className="bg-white pb-4">
       {statut ? (
-        <div className="px-2.5 pt-3">
+        <div className="px-4 pt-4">
           <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${statut.classe}`}>
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
             {statut.label}
@@ -123,7 +151,14 @@ export function InfosProduit({ produitId }: { produitId: number }) {
         </div>
       ) : null}
 
-      <div className="relative h-[320px] w-full shrink-0 bg-[#f2f5fa]">
+      <div className={`flex flex-wrap gap-2 px-4 pb-4 ${statut ? "pt-3" : "pt-4"}`}>
+        {produit.categorie ? <Badge couleur="bleu" label={produit.categorie.nom_categorie} /> : null}
+        {produit.est_booste ? <Badge couleur="vert" label="Booster" /> : null}
+        {enRupture ? <Badge couleur="rose" label="Indisponible" /> : <Badge couleur="vert" label="Disponible" />}
+        <Badge couleur="gris" label={`QTE. ${produit.quantite_stock}`} />
+      </div>
+
+      <div className="relative h-[320px] w-full shrink-0 bg-white">
         {produit.images[imageActive] ? (
           <button
             type="button"
@@ -158,7 +193,7 @@ export function InfosProduit({ produitId }: { produitId: number }) {
       </div>
 
       {produit.images.length > 1 ? (
-        <div className="flex shrink-0 gap-2 overflow-x-auto px-1 pb-[25px] pt-[9px]">
+        <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pt-3">
           {produit.images.map((image, index) => (
             <button
               key={image.id}
@@ -172,11 +207,10 @@ export function InfosProduit({ produitId }: { produitId: number }) {
             </button>
           ))}
         </div>
-      ) : (
-        <div className="h-[25px] shrink-0" />
-      )}
+      ) : null}
+      </div>
 
-      <div className="mx-2.5 flex shrink-0 flex-col gap-1 rounded-xl bg-white p-4" style={{ boxShadow: OMBRE_CARTE }}>
+      <div className="mx-2.5 mt-4 flex shrink-0 flex-col gap-1 rounded-xl bg-white p-4" style={{ boxShadow: OMBRE_CARTE }}>
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-md bg-black px-2 py-1 text-[10px] font-extrabold text-white">
             {produit.nom_produit.split(" ")[0].toUpperCase()}
