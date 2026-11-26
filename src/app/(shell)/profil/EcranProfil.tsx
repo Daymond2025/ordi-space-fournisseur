@@ -56,12 +56,13 @@ function LigneInfo({ icone, label, valeur, accessoire }: { icone: ReactNode; lab
   );
 }
 
-/** "Confidentialité et UGC"/"Contactez le service" — pas encore branchées (aucune page cible construite), même convention que Ordi'Space_Livreur_App_mobile/.../EcranCompte.tsx. */
-function LigneMenu({ icone, iconeClasse, label }: { icone: ReactNode; iconeClasse: string; label: string }) {
+/** Ligne du menu du bas. Sans `onClick` (« Confidentialité et UGC »), la page cible n'existe pas encore. */
+function LigneMenu({ icone, iconeClasse, label, onClick }: { icone: ReactNode; iconeClasse: string; label: string; onClick?: () => void }) {
   return (
     <button
       type="button"
-      aria-label={`${label} (à venir)`}
+      onClick={onClick}
+      aria-label={onClick ? label : `${label} (à venir)`}
       className="flex w-full items-center gap-3 border-b border-brand-line px-4 py-3.5 text-left last:border-b-0"
     >
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconeClasse}`}>{icone}</span>
@@ -227,7 +228,7 @@ export function EcranProfil() {
 
         <div className={`mt-4 mb-6 ${CARTE_CLASSE}`} style={CARTE_OMBRE}>
           <LigneMenu icone={<ShieldIcon className="h-4.5 w-4.5" />} iconeClasse="bg-indigo-50 text-indigo-500" label="Confidentialité et UGC" />
-          <LigneMenu icone={<HeadsetIcon className="h-4.5 w-4.5" />} iconeClasse="bg-amber-50 text-amber-500" label="Contactez le service" />
+          <LigneMenu icone={<HeadsetIcon className="h-4.5 w-4.5" />} iconeClasse="bg-amber-50 text-amber-500" label="Contactez le service" onClick={() => router.push("/contact")} />
         </div>
       </div>
     </div>
