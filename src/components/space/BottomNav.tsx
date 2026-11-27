@@ -100,7 +100,7 @@ export function BottomNav() {
           aria-label="Discussion des commandes"
           className="bg-gradient-espace -mt-6 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white shadow-lg shadow-blue-900/20"
         >
-          <Image src="/images/mascotte.png" alt="" width={64} height={64} className="h-9 w-9 object-contain" />
+          <Image src="/images/mascotte.png" alt="" width={96} height={96} className="h-11 w-11 object-contain" />
         </Link>
       </div>
 

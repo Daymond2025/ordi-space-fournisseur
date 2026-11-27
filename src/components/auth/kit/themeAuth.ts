@@ -47,7 +47,7 @@ export const THEME_AUTH: ThemeAuth = {
   "accentOmbre": "rgba(5,150,105,0.38)",
   "decor": "colis",
   "posture": "flotte",
-  "accessoire": "colis",
+  "accessoire": "aucun",
   "confettis": [
     "#059669",
     "#34d399",
